@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<!--[if lt IE 7]>      <html lang="en" ng-app="myApp" class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html lang="en" ng-app="myApp" class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html lang="en" ng-app="myApp" class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html lang="en" ng-app="KomaruBot" class="no-js">
+ <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Komaru Bot</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--<link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/normalize.css">-->
+    <!--<link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/main.css">-->
+    <link rel="stylesheet" href="/js/src/app.css">
+    <link rel="stylesheet" href="/js/lib/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/js/lib/bootstrap-3.3.7-dist/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="/js/lib/angular-material.min.css">
+    <link rel="stylesheet" href="/js/lib/ui-bootstrap-csp.css">
+    <!--<script src="bower_components/html5-boilerplate/dist/js/vendor/modernizr-2.8.3.min.js"></script>-->
+</head>
+<body>
+    <!--[if lt IE 7]>
+        <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+    <div ng-controller="navBarController" ng-cloak>
+        <div ng-show="isLoggedIn">
+            Welcome {{username}}!
+            <button ng-click="logOut()">Log Out</button>
+        </div>
+
+        <md-content class="md-padding">
+            <md-nav-bar md-selected-nav-item="currentNavItem">
+                <md-nav-item md-nav-click="goto('main')" ng-show="isLoggedIn" name="main">
+                    Account
+                </md-nav-item>
+                <md-nav-item md-nav-click="goto('hype')" ng-show="isLoggedIn" name="hype">
+                    Hype Commands
+                </md-nav-item>
+                <md-nav-item md-nav-click="goto('ceres')" ng-show="isLoggedIn" name="ceres">
+                    Ceres Settings
+                </md-nav-item>
+                <md-nav-item md-nav-click="goto('preauth')" ng-hide="isLoggedIn" name="preauth">
+                    Log In
+                </md-nav-item>
+            </md-nav-bar>
+        </md-content>
+    </div>
+    <div ng-view></div>
+
+    <script src="/js/lib/jquery-3.3.1.min.js"></script>
+    <script src="/js/lib/angular.min.js"></script>
+    <script src="/js/lib/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <script src="/js/lib/angular-route.min.js"></script>
+    <script src="/js/lib/angular-material.min.js"></script>
+    <script src="/js/lib/angular-aria.min.js"></script>
+    <script src="/js/lib/ui-bootstrap.min.js"></script>
+    <script src="/js/lib/angular-animate.min.js"></script>
+    <script src="/js/src/app.js"></script>
+    <script src="/js/src/navBar.js"></script>
+    <script src="/js/src/authService.js"></script>
+    <script src="/js/src/AjaxWrapper.js"></script>
+
+    <script src="/views/preauth.js"></script>
+    <script src="/views/authEnd.js"></script>
+    <script src="/views/main.js"></script>
+    <script src="/views/ceres.js"></script>
+    <script src="/views/hype.js"></script>
+</body>
+</html>
