@@ -1,12 +1,10 @@
-﻿using KomaruBot.DAL;
-using KomaruBot.WebAPI.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KomaruBot.WebAPI.Helpers
+namespace KomaruBot.Common
 {
     public class ExceptionFormatter
     {

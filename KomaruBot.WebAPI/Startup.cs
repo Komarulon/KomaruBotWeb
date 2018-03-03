@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using KomaruBot.Common;
 using KomaruBot.DAL;
 using KomaruBot.WebAPI.Helpers;
 using Microsoft.AspNetCore.Builder;
@@ -41,6 +42,7 @@ namespace KomaruBot.WebAPI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            _loggerFactory = loggerFactory;
             if (env.IsDevelopment())
             {
                 loggerFactory.AddFile("Logs/KomaruBot-{Date}.txt", LogLevel.Warning);
@@ -62,7 +64,42 @@ namespace KomaruBot.WebAPI
             app.UseStaticFiles();
             app.UseMvc();
 
-            loggerFactory.CreateLogger("Startup").LogWarning("Application starting up.");
+
+
+            var settings = app.ApplicationServices.GetService<IOptions<Models.AppSettings>>();
+            chatBotManager = new ChatBot.ChatBotManager(loggerFactory.CreateLogger("ChatBot"), settings.Value.ChatBotTwitchUsername, settings.Value.ChatBotTwitchOauthToken);
+
+            var logger = loggerFactory.CreateLogger("Startup");
+            
+            logger.LogWarning("Application starting up...");
+
+            List<ChatBot.ClientConfiguration> configurations = null;
+
+            try
+            {
+                var userHelper = app.ApplicationServices.GetService<UserHelper>();
+                configurations = userHelper.GetAllUserClientConfigurations();
+
+                logger.LogWarning($"Loaded {configurations.Count} chat bots. Starting them... Chatbot names: {string.Join(", ", configurations.Select(x => x.channelName).ToArray())}");
+
+                foreach (var a in configurations)
+                {
+                    chatBotManager.RegisterConnection(a);
+                }
+
+            }
+            catch (Exception exc)
+            {
+                logger.LogError(ExceptionFormatter.FormatException(exc, $"Exception in {this.GetType().Name} - {System.Reflection.MethodBase.GetCurrentMethod().Name} - Starting chatbots"));
+            }
+
+            keepAlive = new KeepAliveHelper(loggerFactory.CreateLogger("KeepAlive"), settings.Value.ClientUrl + "/api/keepalive");
+
+            logger.LogWarning("Application started up.");
         }
+
+        public static KeepAliveHelper keepAlive;
+        public static ChatBot.ChatBotManager chatBotManager;
+        public static ILoggerFactory _loggerFactory;
     }
 }

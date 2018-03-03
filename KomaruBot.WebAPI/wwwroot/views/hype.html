@@ -1,5 +1,22 @@
 ﻿<p>
-    <div>
+    <div class="alert alert-danger" ng-show="errorMessage != null">
+        {{errorMessage}}
+    </div>
+    <div class="alert alert-success" ng-show="successMessage != null">
+        {{successMessage}}
+    </div>
+    <div ng-hide="loaded">
+        Loading...
+    </div>
+    <div ng-show="loaded">
         Hype Commands:
+        <div>
+            <!--<div ng-repeat="">
+
+            </div>-->
+        </div>
+        <div>
+            <button ng-click="saveSettings()" type="button" class="btn btn-success">Save</button>
+        </div>
     </div>
 </p>

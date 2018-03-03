@@ -1,5 +1,25 @@
 ﻿<p>
-    <div>
+    <div class="alert alert-danger" ng-show="errorMessage != null">
+        {{errorMessage}}
+    </div>
+    <div class="alert alert-success" ng-show="successMessage != null">
+        {{successMessage}}
+    </div>
+    <div ng-hide="loaded">
+        Loading...
+    </div>
+    <div ng-show="loaded">
         Ceres Settings:
+
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" ng-model="ceresEnabled" id="id_ceresEnabled">
+            <label class="form-check-label" for="id_ceresEnabled">
+                Ceres Enabled
+            </label>
+        </div>
+
+        <div>
+            <button ng-click="saveSettings()" type="button" class="btn btn-success">Save</button>
+        </div>
     </div>
 </p>

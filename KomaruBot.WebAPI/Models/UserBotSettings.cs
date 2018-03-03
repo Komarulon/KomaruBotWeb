@@ -17,6 +17,12 @@ namespace KomaruBot.WebAPI.Models
             return $"bot_{this.userID}";
         }
 
+        public static string GetWildcardKey()
+        {
+            return $"bot_*";
+        }
+
+
         //public string TwitchAPIKey { get; set; }
 
         public string streamElementsJWTToken { get; set; }
@@ -26,5 +32,7 @@ namespace KomaruBot.WebAPI.Models
         public string currencySingular { get; set; }
 
         public string currencyPlural { get; set; }
+
+        public bool botEnabled { get; set; }
     }
 }

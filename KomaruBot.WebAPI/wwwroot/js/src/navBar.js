@@ -1,7 +1,7 @@
 ﻿'use strict';
 
 angular.module('KomaruBot')
-.controller('navBarController', ['$scope', '$location', '$rootScope', 'authService', function ($scope, $location, $rootScope, authService) {
+.controller('navBarController', ['$scope', '$location', '$rootScope', '$sce', 'authService', function ($scope, $location, $rootScope, $sce, authService) {
 
     $scope.isLoggedIn = authService.isLoggedIn();
     $scope.currentNavItem = $location.path().replace(/^\//, '');
@@ -13,6 +13,13 @@ angular.module('KomaruBot')
     }
 
     $scope.username = window.sessionStorage["username"];
+
+    $scope.chatSrc = null;
+    if ($scope.isLoggedIn) {
+        
+        $scope.chatSrc = $sce.trustAsResourceUrl("http://www.twitch.tv/embed/" + $scope.username + "/chat");
+    }
+
     $scope.logOut = function () {
         window.sessionStorage.removeItem("username");
         window.sessionStorage.removeItem("accesstoken");

@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KomaruBot.WebAPI", "KomaruBot.WebAPI\KomaruBot.WebAPI.csproj", "{EB060D8F-63AB-4FC2-928B-749F6C21906E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KomaruBot.ChatBot", "KomaruBot.ChatBot\KomaruBot.ChatBot.csproj", "{FDF5324A-EA14-4E98-8DA8-EB34EEDB0B21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KomaruBot.Common", "KomaruBot.Common\KomaruBot.Common.csproj", "{F5E24A70-3782-40B9-909B-021E0AD5BF71}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{EB060D8F-63AB-4FC2-928B-749F6C21906E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB060D8F-63AB-4FC2-928B-749F6C21906E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB060D8F-63AB-4FC2-928B-749F6C21906E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDF5324A-EA14-4E98-8DA8-EB34EEDB0B21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDF5324A-EA14-4E98-8DA8-EB34EEDB0B21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDF5324A-EA14-4E98-8DA8-EB34EEDB0B21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDF5324A-EA14-4E98-8DA8-EB34EEDB0B21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5E24A70-3782-40B9-909B-021E0AD5BF71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5E24A70-3782-40B9-909B-021E0AD5BF71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5E24A70-3782-40B9-909B-021E0AD5BF71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5E24A70-3782-40B9-909B-021E0AD5BF71}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

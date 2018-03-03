@@ -23,7 +23,6 @@
     <PackageReference Include="AWS.Logger.AspNetCore" Version="1.2.5" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="1.1.0" />
-    <PackageReference Include="TwitchLib" Version="1.6.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include=".ebextensions\02-increase-timeout.config" />
+    <None Include=".ebextensions\01-increase-timeout.config" />
     <None Include="wwwroot\index.html" />
     <None Include="wwwroot\js\lib\angular-route.js" />
     <None Include="wwwroot\js\lib\angular-route.min.js" />
@@ -58,6 +59,12 @@
 
   <ItemGroup>
     <DotNetCliToolReference Include="Amazon.ElasticBeanstalk.Tools" Version="1.1.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\KomaruBot.ChatBot\KomaruBot.ChatBot.csproj" />
+    <ProjectReference Include="..\KomaruBot.Common\KomaruBot.Common.csproj" />
   </ItemGroup>
 </Project>
 

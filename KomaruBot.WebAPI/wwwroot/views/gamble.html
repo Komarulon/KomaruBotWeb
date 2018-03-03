@@ -1,0 +1,38 @@
+﻿<p>
+    <div class="alert alert-danger" ng-show="errorMessage != null">
+        {{errorMessage}}
+    </div>
+    <div class="alert alert-success" ng-show="successMessage != null">
+        {{successMessage}}
+    </div>
+    <div ng-hide="loaded">
+        Loading...
+    </div>
+    <div ng-show="loaded">
+        Gamble Settings:
+
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" ng-model="gambleEnabled" id="id_gambleEnabled">
+            <label class="form-check-label" for="id_gambleEnabled">
+                Gamble Enabled
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label for="id_minbid">Minimum Gamble</label>
+            <input type="number" class="form-control" id="id_minbid" ng-model="minBid">
+        </div>
+        <div class="form-group">
+            <label for="id_maxbid">Maximum Gamble</label>
+            <input type="number" class="form-control" id="id_maxbid" ng-model="maxBid">
+        </div>
+        <div class="form-group">
+            <label for="id_minminutes">Minimum Minutes Between Gambles</label>
+            <input type="number" class="form-control" id="id_minminutes" ng-model="minMinutesBetweenGambles">
+        </div>
+
+        <div>
+            <button ng-click="saveSettings()" type="button" class="btn btn-success">Save</button>
+        </div>
+    </div>
+</p>

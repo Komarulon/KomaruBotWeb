@@ -13,19 +13,19 @@ using Microsoft.Extensions.Options;
 namespace KomaruBot.WebAPI.Controllers
 {
     [Route("api/settings/[controller]")]
-    public class BotSettingsController : Controller
+    public class CeresController : Controller
     {
 
         private AppSettings appSettings { get; set; }
         private Authentication.IAuthenticationProvider authenticationProvider { get; set; }
         private UserHelper userHelper { get; set; }
-        private ILogger<BotSettingsController> _logger { get; set; }
+        private ILogger<CeresController> _logger { get; set; }
 
-        public BotSettingsController(
+        public CeresController(
             IOptions<AppSettings> settings,
             Authentication.IAuthenticationProvider authenticationProvider,
             UserHelper userHelper,
-            ILogger<BotSettingsController> logger)
+            ILogger<CeresController> logger)
         {
             this.appSettings = settings.Value;
             this.authenticationProvider = authenticationProvider;
@@ -42,7 +42,7 @@ namespace KomaruBot.WebAPI.Controllers
                 if (userInfo.Result != Constants.AuthenticationResult.Success) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"Could not authenticate"); }
                 if (this.appSettings.TwitchClientID != userInfo.GetClientID()) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"{nameof(this.appSettings.TwitchClientID)} does not match"); }
 
-                var settings = this.userHelper.EnsureDefaultUserSettings(userInfo.GetUserID());
+                var settings = this.userHelper.EnsureDefaultCeresSettings(userInfo.GetUserID());
 
                 return Json(settings);
             }
@@ -56,54 +56,26 @@ namespace KomaruBot.WebAPI.Controllers
         [HttpPut]
         public ActionResult Update(
             [FromBody]
-            UserBotSettings settings
+            CeresSettings settings
             )
         {
             try
             {
                 if (settings == null) { return StatusCode((int)System.Net.HttpStatusCode.BadRequest, $"{nameof(settings)} is null"); }
                 if (string.IsNullOrWhiteSpace(settings.userID)) { return StatusCode((int)System.Net.HttpStatusCode.BadRequest, $"{nameof(settings.userID)} is null"); }
-                if (string.IsNullOrWhiteSpace(settings.currencyPlural)) { return StatusCode((int)System.Net.HttpStatusCode.BadRequest, $"{nameof(settings.currencyPlural)} is null"); }
-                if (string.IsNullOrWhiteSpace(settings.currencySingular)) { return StatusCode((int)System.Net.HttpStatusCode.BadRequest, $"{nameof(settings.currencySingular)} is null"); }
 
                 var userInfo = this.authenticationProvider.Authenticate(this.HttpContext);
                 if (userInfo.Result != Constants.AuthenticationResult.Success) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"Could not authenticate"); }
                 if (this.appSettings.TwitchClientID != userInfo.GetClientID()) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"{nameof(this.appSettings.TwitchClientID)} does not match"); }
                 if (settings.userID != userInfo.GetUserID()) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"{nameof(settings.userID)} is not yours"); }
 
-                var pointsManager = new Common.PointsManagers.StreamElementsPointsManager(
-                    Startup._loggerFactory.CreateLogger("StreamElementsPointsManager"),
-                    settings.streamElementsJWTToken,
-                    settings.currencyPlural,
-                    settings.currencySingular,
-                    settings.streamElementsAccountID);
-
-                var setupCorrect = pointsManager.CheckSettingsCorrect(userInfo.GetUserID());
-
-                if (!setupCorrect)
+                var validationResult = settings.validate();
+                if (validationResult != System.ComponentModel.DataAnnotations.ValidationResult.Success)
                 {
-                    return StatusCode((int)System.Net.HttpStatusCode.BadRequest, "Could not verify Stream Elements Account settings. Please make sure they're configured correctly.");
+                    return StatusCode((int)System.Net.HttpStatusCode.BadRequest, validationResult.ErrorMessage);
                 }
-
 
                 this.userHelper.SaveSettings(settings);
-
-                if (settings.botEnabled)
-                {
-                    var config = this.userHelper.GetConfigurationForUser(settings);
-                    if (config != null)
-                    {
-                        Startup.chatBotManager.RegisterConnection(config);
-                    }
-                    else
-                    {
-                        this._logger.LogError($"UserID {settings.userID} got back null as BotConfiguration");
-                    }
-                }
-                else
-                {
-                    Startup.chatBotManager.UnregisterConnection(settings.userID);
-                }
 
                 return Json(settings);
             }

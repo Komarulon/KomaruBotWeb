@@ -11,6 +11,9 @@
     <title>Komaru Bot</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
     <!--<link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/normalize.css">-->
     <!--<link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/main.css">-->
     <link rel="stylesheet" href="/js/src/app.css">
@@ -25,29 +28,52 @@
         <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
     <div ng-controller="navBarController" ng-cloak>
-        <div ng-show="isLoggedIn">
-            Welcome {{username}}!
-            <button ng-click="logOut()">Log Out</button>
+        <div>
+            <md-content class="md-padding">
+                <md-nav-bar md-selected-nav-item="currentNavItem">
+                    <md-nav-item md-nav-click="goto('main')" ng-show="isLoggedIn" name="main">
+                        Account
+                    </md-nav-item>
+                    <md-nav-item md-nav-click="goto('ceres')" ng-show="isLoggedIn" name="ceres">
+                        Ceres Settings
+                    </md-nav-item>
+                    <md-nav-item md-nav-click="goto('hype')" ng-show="isLoggedIn" name="hype">
+                        Hype Commands
+                    </md-nav-item>
+                    <md-nav-item md-nav-click="goto('gamble')" ng-show="isLoggedIn" name="gamble">
+                        Gamble Settings
+                    </md-nav-item>
+                    <md-nav-item md-nav-click="goto('preauth')" ng-hide="isLoggedIn" name="preauth">
+                        Log In
+                    </md-nav-item>
+                    <md-nav-item md-nav-click="logOut" ng-show="isLoggedIn">
+                        Log Out
+                    </md-nav-item>
+                </md-nav-bar>
+            </md-content>
         </div>
+        <div>
+            <div ng-view style="float: left; margin-left: 10px;">
 
-        <md-content class="md-padding">
-            <md-nav-bar md-selected-nav-item="currentNavItem">
-                <md-nav-item md-nav-click="goto('main')" ng-show="isLoggedIn" name="main">
-                    Account
-                </md-nav-item>
-                <md-nav-item md-nav-click="goto('hype')" ng-show="isLoggedIn" name="hype">
-                    Hype Commands
-                </md-nav-item>
-                <md-nav-item md-nav-click="goto('ceres')" ng-show="isLoggedIn" name="ceres">
-                    Ceres Settings
-                </md-nav-item>
-                <md-nav-item md-nav-click="goto('preauth')" ng-hide="isLoggedIn" name="preauth">
-                    Log In
-                </md-nav-item>
-            </md-nav-bar>
-        </md-content>
+            </div>
+            <div style="float: right; margin-right: 10px; padding: 0px;" ng-show="isLoggedIn" class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        {{username}}'s Chat
+                    </h3>
+                </div>
+                <div class="panel-body" style="padding: 0px;">
+                    <iframe frameborder="0"
+                            scrolling="yes"
+                            id="chat_embed"
+                            ng-src="{{chatSrc}}"
+                            height="700"
+                            width="340"></iframe>
+                </div>
+            </div>
+            <br style="clear: both; " />
+        </div>
     </div>
-    <div ng-view></div>
 
     <script src="/js/lib/jquery-3.3.1.min.js"></script>
     <script src="/js/lib/angular.min.js"></script>
@@ -66,6 +92,7 @@
     <script src="/views/authEnd.js"></script>
     <script src="/views/main.js"></script>
     <script src="/views/ceres.js"></script>
+    <script src="/views/gamble.js"></script>
     <script src="/views/hype.js"></script>
 </body>
 </html>

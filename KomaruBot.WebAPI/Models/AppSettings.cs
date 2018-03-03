@@ -14,6 +14,9 @@ namespace KomaruBot.WebAPI.Models
         public string TwitchScopes { get; set; }
         public string TwitchOauthEndpoint { get; set; }
         public string RedisConnectionString { get; set; }
+
+        public string ChatBotTwitchUsername { get; set; }
+        public string ChatBotTwitchOauthToken { get; set; }
     }
 
     

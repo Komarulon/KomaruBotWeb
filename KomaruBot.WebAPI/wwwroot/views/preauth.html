@@ -1,6 +1,6 @@
 ﻿<p>
     <div ng-hide="isLoggedIn">
-        <a ng-show="twitchAuthLink != null" ng-href="{{twitchAuthLink}}">Click here to log in.</a>
+        <a ng-show="twitchAuthLink != null" ng-href="{{twitchAuthLink}}" class="btn btn-link">Click here to log in.</a>
         <span ng-hide="twitchAuthLink != null">Loading link...</span>
     </div>
     <div ng-show="isLoggedIn">

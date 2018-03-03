@@ -16,6 +16,7 @@ angular.module('KomaruBot')
     $scope.streamElementsAccountID = null;
     $scope.currencySingular = null;
     $scope.currencyPlural = null;
+    $scope.botEnabled = false;
 
     $scope.loaded = false;
     $scope.errorMessage = null;
@@ -35,6 +36,7 @@ angular.module('KomaruBot')
             $scope.streamElementsAccountID = json.streamElementsAccountID;
             $scope.currencySingular = json.currencySingular;
             $scope.currencyPlural = json.currencyPlural;
+            $scope.botEnabled = json.botEnabled;
 
             $scope.loaded = true;
             $scope.errorMessage = null;
@@ -54,6 +56,7 @@ angular.module('KomaruBot')
             currencySingular: $scope.currencySingular,
             currencyPlural: $scope.currencyPlural,
             userID: $scope.userID,
+            botEnabled: $scope.botEnabled,
         };
 
         $.PerformHttpRequest({
@@ -73,6 +76,7 @@ angular.module('KomaruBot')
                 $scope.successMessage = null;
                 $scope.$apply();
             },
-        }); 
-    }
+        });
+    };
+
 }]);
