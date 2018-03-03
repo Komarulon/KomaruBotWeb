@@ -10,8 +10,13 @@ namespace KomaruBot.Common.Models
         public int pointsCost { get; set; }
         public int accessLevel { get; set; }
         public string commandText { get; set; }
-        public List<string> commandResponses { get; set; }
+        public List<HypeCommandResponse> commandResponses { get; set; }
         public bool randomizeResponseOrders { get; set; }
         public int numberOfResponses { get; set; }
+    }
+
+    public class HypeCommandResponse
+    {
+        public string message { get; set; }
     }
 }

@@ -15,6 +15,7 @@ angular.module('KomaruBot')
     $scope.ceresEnabled = false;
 
     $scope.loaded = false;
+    $scope.loadingMessage = "Loading...";
     $scope.errorMessage = null;
     $scope.successMessage = null;
 
@@ -30,12 +31,21 @@ angular.module('KomaruBot')
             $scope.ceresEnabled = json.ceresConfiguration.ceresEnabled;
 
             $scope.loaded = true;
+            $scope.loadingMessage = null;
             $scope.errorMessage = null;
+            $scope.successMessage = null;
             $scope.$apply();
         },
-        error: function () {
-            $scope.errorMessage = "There was an error loading your Ceres settings. Please let Komaru know.";
-            $scope.successMessage = null;
+        error: function (response) {
+            if (response != null && response.responseJSON != null && response.responseJSON.message != null) {
+                $scope.loadingMessage = null;
+                $scope.errorMessage = response.responseJSON.message;
+                $scope.successMessage = null;
+            } else {
+                $scope.loadingMessage = null;
+                $scope.errorMessage = "There was an error loading your Ceres settings. Please let Komaru know.";
+                $scope.successMessage = null;
+            }
             $scope.$apply();
         },
     });
@@ -48,6 +58,10 @@ angular.module('KomaruBot')
             }
         };
 
+        $scope.loadingMessage = "Saving Ceres settings...";
+        $scope.errorMessage = null;
+        $scope.successMessage = null;
+
         $.PerformHttpRequest({
             type: "PUT",
             url: "api/settings/ceres",
@@ -56,13 +70,29 @@ angular.module('KomaruBot')
             loadingIcon: null,
             error: null,
             success: function (json) {
-                $scope.successMessage = "Ceres settings saved.";
+
+                $scope.loadingMessage = null;
                 $scope.errorMessage = null;
+                $scope.successMessage = "Ceres settings saved.";
                 $scope.$apply();
+
+                setTimeout(function () {
+                    if ($scope.successMessage == "Ceres settings saved.") {
+                        $scope.successMessage = null;
+                        $scope.$apply();
+                    }
+                }, 10000);
             },
-            error: function () {
-                $scope.errorMessage = "There was an error saving your Ceres settings. Please let Komaru know.";
-                $scope.successMessage = null;
+            error: function (response) {
+                if (response != null && response.responseJSON != null && response.responseJSON.message != null) {
+                    $scope.loadingMessage = null;
+                    $scope.errorMessage = response.responseJSON.message;
+                    $scope.successMessage = null;
+                } else {
+                    $scope.loadingMessage = null;
+                    $scope.errorMessage = "There was an error saving your Ceres settings. Please let Komaru know.";
+                    $scope.successMessage = null;
+                }
                 $scope.$apply();
             },
         });

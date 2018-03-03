@@ -71,7 +71,7 @@ namespace KomaruBot.WebAPI
 
             var logger = loggerFactory.CreateLogger("Startup");
             
-            logger.LogWarning("Application starting up...");
+            logger.LogInformation("Application starting up...");
 
             List<ChatBot.ClientConfiguration> configurations = null;
 
@@ -80,7 +80,7 @@ namespace KomaruBot.WebAPI
                 var userHelper = app.ApplicationServices.GetService<UserHelper>();
                 configurations = userHelper.GetAllUserClientConfigurations();
 
-                logger.LogWarning($"Loaded {configurations.Count} chat bots. Starting them... Chatbot names: {string.Join(", ", configurations.Select(x => x.channelName).ToArray())}");
+                logger.LogInformation($"Loaded {configurations.Count} chat bots. Starting them... Chatbot names: {string.Join(", ", configurations.Select(x => x.channelName).ToArray())}");
 
                 foreach (var a in configurations)
                 {
@@ -95,7 +95,7 @@ namespace KomaruBot.WebAPI
 
             keepAlive = new KeepAliveHelper(loggerFactory.CreateLogger("KeepAlive"), settings.Value.ClientUrl + "/api/keepalive");
 
-            logger.LogWarning("Application started up.");
+            logger.LogInformation("Application started up.");
         }
 
         public static KeepAliveHelper keepAlive;

@@ -36,7 +36,7 @@ namespace KomaruBot.WebAPI.Helpers
             {
                 actionTimer = new Timer((state2) =>
                 {
-                    _logger.LogInformation("Sending Keep-alive request");
+                    _logger.LogWarning("Sending Keep-alive request");
 
                     try
                     {

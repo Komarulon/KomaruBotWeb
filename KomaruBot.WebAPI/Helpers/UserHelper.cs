@@ -1,4 +1,5 @@
-﻿using KomaruBot.Common.PointsManagers;
+﻿using KomaruBot.Common.Interfaces;
+using KomaruBot.Common.PointsManagers;
 using KomaruBot.DAL;
 using KomaruBot.WebAPI.Models;
 using System;
@@ -19,7 +20,17 @@ namespace KomaruBot.WebAPI.Helpers
         public UserBotSettings EnsureDefaultUserSettings(string userID)
         {
             var key = UserBotSettings.GetKey(userID);
-            var botSettings = this.redis.Get<UserBotSettings>(key);
+            UserBotSettings botSettings;
+            try
+            {
+                botSettings = this.redis.Get<UserBotSettings>(key);
+            }
+            catch (System.Runtime.Serialization.SerializationException)
+            {
+                this.redis.Delete(key);
+                botSettings = null;
+            }
+
             if (botSettings == null)
             {
                 botSettings = new UserBotSettings
@@ -40,7 +51,17 @@ namespace KomaruBot.WebAPI.Helpers
         public HypeCommandsSettings EnsureDefaultHypeSettings(string userID)
         {
             var key = HypeCommandsSettings.GetKey(userID);
-            var hypeCommandsSettings = this.redis.Get<HypeCommandsSettings>(key);
+            HypeCommandsSettings hypeCommandsSettings;
+            try
+            {
+                hypeCommandsSettings = this.redis.Get<HypeCommandsSettings>(key);
+            }
+            catch (System.Runtime.Serialization.SerializationException)
+            {
+                this.redis.Delete(key);
+                hypeCommandsSettings = null;
+            }
+
             if (hypeCommandsSettings == null)
             {
                 hypeCommandsSettings = new HypeCommandsSettings
@@ -51,9 +72,21 @@ namespace KomaruBot.WebAPI.Helpers
                         new Common.Models.HypeCommand
                         {
                             accessLevel = (int)KomaruBot.Common.Constants.AccessLevel.Public,
-                            commandResponses = new List<string>
+                            commandResponses = new List<Common.Models.HypeCommandResponse>
                             {
-                                "D e e R F o r C e",
+                                new Common.Models.HypeCommandResponse { message = "D e e R F o r C e", }
+                            },
+                            commandText = "!df",
+                            numberOfResponses = 1,
+                            pointsCost = 0,
+                            randomizeResponseOrders = false,
+                        },
+                        new Common.Models.HypeCommand
+                        {
+                            accessLevel = (int)KomaruBot.Common.Constants.AccessLevel.Public,
+                            commandResponses = new List<Common.Models.HypeCommandResponse>
+                            {
+                                new Common.Models.HypeCommandResponse { message = "D e e R F o r C e", }
                             },
                             commandText = "!deerforce",
                             numberOfResponses = 1,
@@ -71,7 +104,17 @@ namespace KomaruBot.WebAPI.Helpers
         public GambleSettings EnsureDefaultGambleSettings(string userID)
         {
             var key = GambleSettings.GetKey(userID);
-            var gambleSettings = this.redis.Get<GambleSettings>(key);
+            GambleSettings gambleSettings;
+            try
+            {
+                gambleSettings = this.redis.Get<GambleSettings>(key);
+            }
+            catch (System.Runtime.Serialization.SerializationException)
+            {
+                this.redis.Delete(key);
+                gambleSettings = null;
+            }
+
             if (gambleSettings == null)
             {
                 gambleSettings = new GambleSettings
@@ -197,7 +240,17 @@ namespace KomaruBot.WebAPI.Helpers
         public CeresSettings EnsureDefaultCeresSettings(string userID)
         {
             var key = CeresSettings.GetKey(userID);
-            var ceresSettings = this.redis.Get<CeresSettings>(key);
+            CeresSettings ceresSettings;
+            try
+            {
+                ceresSettings = this.redis.Get<CeresSettings>(key);
+            }
+            catch (System.Runtime.Serialization.SerializationException)
+            {
+                this.redis.Delete(key);
+                ceresSettings = null;
+            }
+
             if (ceresSettings == null)
             {
                 ceresSettings = new CeresSettings
@@ -229,6 +282,18 @@ namespace KomaruBot.WebAPI.Helpers
             return this.GetConfigurationForUser(botSettings);
         }
 
+        public IPointsManager GetPointsManager(UserBotSettings botSettings)
+        {
+            var pointsManager = new StreamElementsPointsManager(
+                Startup._loggerFactory.CreateLogger("StreamElementsPointsManager"),
+                botSettings.streamElementsJWTToken,
+                botSettings.currencyPlural,
+                botSettings.currencySingular,
+                botSettings.streamElementsAccountID);
+
+            return pointsManager;
+        }
+
         public ChatBot.ClientConfiguration GetConfigurationForUser(UserBotSettings botSettings)
         {
             if (botSettings == null)
@@ -245,12 +310,7 @@ namespace KomaruBot.WebAPI.Helpers
             var gambleSettings = this.EnsureDefaultGambleSettings(botSettings.userID);
             var ceresSettings = this.EnsureDefaultCeresSettings(botSettings.userID);
 
-            var pointsManager = new StreamElementsPointsManager(
-                Startup._loggerFactory.CreateLogger("StreamElementsPointsManager"),
-                botSettings.streamElementsJWTToken,
-                botSettings.currencyPlural,
-                botSettings.currencySingular,
-                botSettings.streamElementsAccountID);
+            var pointsManager = this.GetPointsManager(botSettings);
 
             var config = new ChatBot.ClientConfiguration
             {

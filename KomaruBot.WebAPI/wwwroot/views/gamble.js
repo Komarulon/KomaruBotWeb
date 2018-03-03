@@ -19,6 +19,7 @@ angular.module('KomaruBot')
     $scope.rollResults = [];
 
     $scope.loaded = false;
+    $scope.loadingMessage = "Loading...";
     $scope.errorMessage = null;
     $scope.successMessage = null;
 
@@ -38,12 +39,21 @@ angular.module('KomaruBot')
             $scope.rollResults = json.gambleConfiguration.rollResults;
 
             $scope.loaded = true;
+            $scope.loadingMessage = null;
             $scope.errorMessage = null;
+            $scope.successMessage = null;
             $scope.$apply();
         },
-        error: function () {
-            $scope.errorMessage = "There was an error loading your Gamble settings. Please let Komaru know.";
-            $scope.successMessage = null;
+        error: function (response) {
+            if (response != null && response.responseJSON != null && response.responseJSON.message != null) {
+                $scope.loadingMessage = null;
+                $scope.errorMessage = response.responseJSON.message;
+                $scope.successMessage = null;
+            } else {
+                $scope.loadingMessage = null;
+                $scope.errorMessage = "There was an error loading your Gamble settings. Please let Komaru know.";
+                $scope.successMessage = null;
+            }
             $scope.$apply();
         },
     });
@@ -60,6 +70,10 @@ angular.module('KomaruBot')
             }
         };
 
+        $scope.loadingMessage = "Saving Gamble settings...";
+        $scope.errorMessage = null;
+        $scope.successMessage = null;
+
         $.PerformHttpRequest({
             type: "PUT",
             url: "api/settings/gamble",
@@ -68,13 +82,29 @@ angular.module('KomaruBot')
             loadingIcon: null,
             error: null,
             success: function (json) {
-                $scope.successMessage = "Gamble settings saved.";
+
+                $scope.loadingMessage = null;
                 $scope.errorMessage = null;
+                $scope.successMessage = "Gamble settings saved.";
                 $scope.$apply();
+
+                setTimeout(function () {
+                    if ($scope.successMessage == "Gamble settings saved.") {
+                        $scope.successMessage = null;
+                        $scope.$apply();
+                    }
+                }, 10000);
             },
-            error: function () {
-                $scope.errorMessage = "There was an error saving your Gamble settings. Please let Komaru know.";
-                $scope.successMessage = null;
+            error: function (response) {
+                if (response != null && response.responseJSON != null && response.responseJSON.message != null) {
+                    $scope.loadingMessage = null;
+                    $scope.errorMessage = response.responseJSON.message;
+                    $scope.successMessage = null;
+                } else {
+                    $scope.loadingMessage = null;
+                    $scope.errorMessage = "There was an error saving your Gamble settings. Please let Komaru know.";
+                    $scope.successMessage = null;
+                }
                 $scope.$apply();
             },
         });

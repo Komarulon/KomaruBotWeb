@@ -76,6 +76,7 @@ namespace KomaruBot.WebAPI.Controllers
                 }
 
                 this.userHelper.SaveSettings(settings);
+                Startup.chatBotManager.UpdateConnection(userInfo.GetUserID(), settings.gambleConfiguration);
 
                 return Json(settings);
             }

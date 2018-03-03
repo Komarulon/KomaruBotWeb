@@ -5,8 +5,8 @@
     <div class="alert alert-success" ng-show="successMessage != null">
         {{successMessage}}
     </div>
-    <div ng-hide="loaded">
-        Loading...
+    <div class="alert alert-info" ng-show="loadingMessage != null">
+        {{loadingMessage}}
     </div>
     <div ng-show="loaded">
         Ceres Settings:

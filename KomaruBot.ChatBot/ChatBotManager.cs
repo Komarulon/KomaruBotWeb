@@ -7,6 +7,8 @@ using TwitchLib.Events.Client;
 using TwitchLib.Models.Client;
 using Microsoft.Extensions.Logging;
 using KomaruBot.Common;
+using KomaruBot.Common.Models;
+using KomaruBot.Common.Interfaces;
 
 namespace KomaruBot.ChatBot
 {
@@ -41,7 +43,7 @@ namespace KomaruBot.ChatBot
             }
         }
 
-        public void RegisterConnection(ClientConfiguration channel)
+        public bool RegisterConnection(ClientConfiguration channel)
         {
             lock (chatBots)
             {
@@ -51,6 +53,58 @@ namespace KomaruBot.ChatBot
                     bot = new ChatBotConnection(this.logger, this.ChatBotTwitchUsername, this.ChatBotTwitchOauthToken, channel);
                     chatBots.Add(channel.channelName, bot);
                     this.logger.LogInformation("Started chatbot for " + channel.channelName);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // TODO: if settings are the same, don't update!
+
+        public void UpdateConnection(string channelName, IPointsManager pointsManager)
+        {
+            lock (chatBots)
+            {
+                ChatBotConnection bot;
+                if (chatBots.TryGetValue(channelName, out bot))
+                {
+                    bot.ConfigurePointsManager(pointsManager);
+                }
+            }
+        }
+
+        public void UpdateConnection(string channelName, List<HypeCommand> hypeCommands)
+        {
+            lock (chatBots)
+            {
+                ChatBotConnection bot;
+                if (chatBots.TryGetValue(channelName, out bot))
+                {
+                    bot.ConfigureHype(hypeCommands);   
+                }
+            }
+        }
+
+        public void UpdateConnection(string channelName, GambleConfiguration gambleSettings)
+        {
+            lock (chatBots)
+            {
+                ChatBotConnection bot;
+                if (chatBots.TryGetValue(channelName, out bot))
+                {
+                    bot.ConfigureGamble(gambleSettings);
+                }
+            }
+        }
+
+        public void UpdateConnection(string channelName, CeresConfiguration ceresSettings)
+        {
+            lock (chatBots)
+            {
+                ChatBotConnection bot;
+                if (chatBots.TryGetValue(channelName, out bot))
+                {
+                    bot.ConfigureCeres(ceresSettings);
                 }
             }
         }

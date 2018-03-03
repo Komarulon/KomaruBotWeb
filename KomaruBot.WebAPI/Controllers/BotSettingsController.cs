@@ -71,18 +71,12 @@ namespace KomaruBot.WebAPI.Controllers
                 if (this.appSettings.TwitchClientID != userInfo.GetClientID()) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"{nameof(this.appSettings.TwitchClientID)} does not match"); }
                 if (settings.userID != userInfo.GetUserID()) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"{nameof(settings.userID)} is not yours"); }
 
-                var pointsManager = new Common.PointsManagers.StreamElementsPointsManager(
-                    Startup._loggerFactory.CreateLogger("StreamElementsPointsManager"),
-                    settings.streamElementsJWTToken,
-                    settings.currencyPlural,
-                    settings.currencySingular,
-                    settings.streamElementsAccountID);
-
+                var pointsManager = this.userHelper.GetPointsManager(settings);
                 var setupCorrect = pointsManager.CheckSettingsCorrect(userInfo.GetUserID());
 
                 if (!setupCorrect)
                 {
-                    return StatusCode((int)System.Net.HttpStatusCode.BadRequest, "Could not verify Stream Elements Account settings. Please make sure they're configured correctly.");
+                    return StatusCode((int)System.Net.HttpStatusCode.BadRequest, new { message = "Could not verify Stream Elements Account settings. Please make sure they're configured correctly." });
                 }
 
 
@@ -93,7 +87,11 @@ namespace KomaruBot.WebAPI.Controllers
                     var config = this.userHelper.GetConfigurationForUser(settings);
                     if (config != null)
                     {
-                        Startup.chatBotManager.RegisterConnection(config);
+                        var botAlreadyRegistered = Startup.chatBotManager.RegisterConnection(config);
+                        if (botAlreadyRegistered)
+                        {
+                            Startup.chatBotManager.UpdateConnection(userInfo.GetUserID(), pointsManager);
+                        }
                     }
                     else
                     {

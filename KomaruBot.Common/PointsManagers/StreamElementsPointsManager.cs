@@ -82,11 +82,12 @@ namespace KomaruBot.Common.PointsManagers
 
         public long GetCurrentPlayerPoints(string userName)
         {
+            var url = $"https://api.streamelements.com/kappa/v2/points/{streamElementsAccountID}/{userName}";
             try
             {
                 HttpClient client = new HttpClient();
 
-                var request = new HttpRequestMessage(new HttpMethod("GET"), $"https://api.streamelements.com/kappa/v2/points/{streamElementsAccountID}/{userName}");
+                var request = new HttpRequestMessage(new HttpMethod("GET"), url);
                 request.Headers.Accept.Clear();
                 request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
                 request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("text/plain"));
@@ -106,7 +107,7 @@ namespace KomaruBot.Common.PointsManagers
                 // but this stops all logging for legit 404 responses
                 else if (content.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    _logger.LogWarning($"Unable to get points for {userName}. StreamElements API returned NotFound (maybe the user has no points yet? If it happens a lot this is an error!)");
+                    _logger.LogWarning($"Unable to get points for {userName}. StreamElements API returned NotFound (maybe the user has no points yet? If it happens a lot this is an error!). Used URL [{url}]");
                     return 0;
                 }
                 else

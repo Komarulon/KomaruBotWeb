@@ -5,18 +5,76 @@
     <div class="alert alert-success" ng-show="successMessage != null">
         {{successMessage}}
     </div>
-    <div ng-hide="loaded">
-        Loading...
+    <div class="alert alert-info" ng-show="loadingMessage != null">
+        {{loadingMessage}}
     </div>
     <div ng-show="loaded">
-        Hype Commands:
-        <div>
-            <!--<div ng-repeat="">
-
-            </div>-->
+        <div style="margin-bottom: 15px;">
+            <button ng-click="saveSettings()" type="button" class="btn btn-success">Save Changes</button>
         </div>
+
         <div>
-            <button ng-click="saveSettings()" type="button" class="btn btn-success">Save</button>
+            <div ng-repeat="hc in hypeCommands">
+                <div class="panel panel-default" style="width: 530px;">
+                    <div class="panel-heading">
+                        <div class="form-group" style="margin-bottom: -15px;">
+                            <input type="text" class="form-control" ng-model="hc.commandText">
+                            <input class="form-check-input" type="checkbox" ng-model="hc.enabled" ng-attr-id="{{'id_commandEnabled_' + hc.id}}">
+                            <label class="form-check-label" ng-attr-for="{{'id_commandEnabled_' + hc.id}}">Command Enabled</label>
+                            <select ng-model="hc.accessLevel" ng-options="opt.id as opt.label for opt in accessLevels"></select>
+                            <button type="button" class="btn btn-link" ng-click="hc.ShowHide = !hc.ShowHide">Show/Hide</button>
+                        </div>
+                    </div>
+                    <div class="panel-body" ng-show="hc.ShowHide">
+                        <div class="form-group">
+                            <label style="display: inline-block;">Cost: </label>
+                            <input style="display: inline-block; width: 200px;" type="number" class="form-control" ng-model="hc.pointsCost">
+                        </div>
+
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    <div style="float: left;">
+                                        Responses
+                                    </div>
+                                    <div style="float: right;">
+                                        <input class="form-check-input" type="checkbox" ng-model="hc.randomizeResponseOrders" ng-attr-id="{{'id_randomized_' + hc.id}}">
+                                        <label class="form-check-label" ng-attr-for="{{'id_randomized_' + hc.id}}">
+                                            Randomize
+                                        </label>
+                                    </div>
+                                    <br style="clear: both;" />
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <label style="display: inline-block;">Number of Responses from Bot: </label>
+                                    <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="hc.numberOfResponses">
+                                </div>
+                                <div ng-repeat="response in hc.commandResponses track by $index">
+                                    <div class="form-group">
+
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" placeholder="Bot will say.." ng-model="response.message">
+                                            <span class="input-group-btn">
+                                                <button class="btn btn-danger" ng-click="removeResponse(hc, $index)">
+                                                    Remove
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-hide="anyNullResponses(hc)">
+                                    <button type="button" class="btn btn-success" ng-click="addResponse(hc)">Add Response</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-success" ng-click="addHypeCommand()">New Command</button>
+
         </div>
     </div>
 </p>

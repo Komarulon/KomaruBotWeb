@@ -70,6 +70,7 @@ namespace KomaruBot.WebAPI.Controllers
                 if (settings.userID != userInfo.GetUserID()) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"{nameof(settings.userID)} is not yours"); }
 
                 this.userHelper.SaveSettings(settings);
+                Startup.chatBotManager.UpdateConnection(userInfo.GetUserID(), settings.hypeCommands);
 
                 return Json(settings);
             }

@@ -9,6 +9,8 @@ using Microsoft.Extensions.Logging;
 using KomaruBot.Common;
 using System.Linq;
 using KomaruBot.ChatBot.Ceres;
+using KomaruBot.Common.Models;
+using KomaruBot.Common.Interfaces;
 
 namespace KomaruBot.ChatBot
 {
@@ -38,34 +40,63 @@ namespace KomaruBot.ChatBot
             this.ChatBotTwitchOauthToken = chatBotTwitchOauthToken;
             this.channelDetails = channelDetails;
 
-            this.connect();
+            lock (this.commands)
+            {
+                this.connect();
+                this.ConfigureCeres();
+                this.ConfigureHype();
+                this.ConfigureGamble();
+                this.ConfigurePointsManager();
+            }
+        }
 
-            this.ceres = new CeresGuessingGame(
-                logger,
-                channelDetails.channelName,
-                () =>
-                {
-                    // On begin guessing
-                    this.sendMessage($"Ceres round started. Type {(this.commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Guess).commandText)} xxxx to register your Ceres time guess. You have {CeresGuessingGame.secondsToGuess} seconds to place your guess.");
-                },
-                () =>
-                {
-                    // On round canceled
-                    this.sendMessage("Ceres round cancelled.");
-                },
-                () =>
-                {
-                    // On round finished
-                    this.sendMessage("Ceres round completed or something.");
-                },
-                () =>
-                {
-                    // On guessing time finished
-                    this.sendMessage($"Ceres time guessing has ended. Good luck!");
-                });
+        public void ConfigurePointsManager(IPointsManager newSettings = null)
+        {
+            if (newSettings != null)
+            {
+                this.channelDetails.pointsManager = newSettings;
+            }
+        }
+
+        public void ConfigureCeres(CeresConfiguration newSettings = null)
+        {
+            if (newSettings != null)
+            {
+                this.channelDetails.ceresConfiguration = newSettings;
+            }
 
             if (this.channelDetails.ceresConfiguration != null && this.channelDetails.ceresConfiguration.ceresEnabled)
             {
+                // only use the one ceres object. If the user turns it off and then on again we want to keep this round going
+                if (this.ceres == null)
+                {
+                    this.ceres = new CeresGuessingGame(
+                        logger,
+                        channelDetails.channelName,
+                        () =>
+                        {
+                        // On begin guessing
+                        lock (this.commands)
+                            {
+                                this.sendMessage($"Ceres round started. Type {(this.commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Guess).commandText)} xxxx to register your Ceres time guess. You have {CeresGuessingGame.secondsToGuess} seconds to place your guess.");
+                            }
+                        },
+                        () =>
+                        {
+                        // On round canceled
+                        this.sendMessage("Ceres round cancelled.");
+                        },
+                        () =>
+                        {
+                        // On round finished
+                        this.sendMessage("Ceres round completed or something.");
+                        },
+                        () =>
+                        {
+                        // On guessing time finished
+                        this.sendMessage($"Ceres time guessing has ended. Good luck!");
+                        });
+                }
 
                 this.commands.Add(new Command(
                     Constants.CommandType.StartCeres,
@@ -85,9 +116,9 @@ namespace KomaruBot.ChatBot
                     {
                         string endtime = new string(message.Message.Where(Char.IsDigit).ToArray()); // linq magic to extract any leading/trailing chars
 
-                    if (endtime.Length != 4)
+                        if (endtime.Length != 4)
                         {
-                            this.logger.LogInformation("Invalid endtime (" + endtime + ")", true);
+                            this.logger.LogWarning("Invalid endtime (" + endtime + ")", true);
                             return;
                         }
 
@@ -120,9 +151,12 @@ namespace KomaruBot.ChatBot
                     {
                         string guess = new string(message.Message.Where(Char.IsDigit).ToArray()); // linq magic to extract any leading/trailing chars
 
-                    if (guess.Length != 4)
+                        if (guess.Length != 4)
                         {
-                            sendMessage($"I'm not sure what guess you meant, @{message.Username} . Please enter a new guess with {(this.commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Guess).commandText)} xxxx");
+                            lock (this.commands)
+                            { 
+                                sendMessage($"I'm not sure what guess you meant, @{message.Username} . Please enter a new guess with {(this.commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Guess).commandText)} xxxx");
+                            }
                             return;
                         }
 
@@ -136,10 +170,29 @@ namespace KomaruBot.ChatBot
                     "!guess"
                 ));
             }
+            else
+            {
+                this.commands.RemoveAll(x => x.commandType == Constants.CommandType.StartCeres ||
+                    x.commandType == Constants.CommandType.StartCeres ||
+                    x.commandType == Constants.CommandType.EndCeres ||
+                    x.commandType == Constants.CommandType.CancelCeres ||
+                    x.commandType == Constants.CommandType.Guess);
+                if (this.ceres != null)
+                {
+                    this.ceres.shutdown();
+                }
+            }
+        }
+
+        public void ConfigureGamble(GambleConfiguration newSettings = null)
+        {
+            if (newSettings != null)
+            {
+                this.channelDetails.gambleConfiguration = newSettings;
+            }
 
             if (this.channelDetails.gambleConfiguration != null && this.channelDetails.gambleConfiguration.gambleEnabled)
             {
-
                 this.commands.Add(new Command(
                     Constants.CommandType.Gamble,
                     new Action<ChatMessage, Command>((message, command) =>
@@ -152,6 +205,22 @@ namespace KomaruBot.ChatBot
                     "!gamble"
                 ));
             }
+            else
+            {
+                this.commands.RemoveAll(x => x.commandType == Constants.CommandType.Gamble);
+            }
+        }
+
+        public void ConfigureHype(List<HypeCommand> newSettings = null)
+        {
+            if (newSettings != null)
+            {
+                this.channelDetails.hypeCommands = newSettings;
+            }
+
+            // Complete reset:
+
+            this.commands.RemoveAll(x => x.commandType == Constants.CommandType.Hype);
 
             foreach (var cmd in this.channelDetails.hypeCommands)
             {
@@ -161,7 +230,18 @@ namespace KomaruBot.ChatBot
                     Constants.CommandType.Hype,
                     new Action<ChatMessage, Command>((message, command) =>
                     {
-                        var hCommand = this.channelDetails.hypeCommands.FirstOrDefault(x => x.commandText == command.commandText);
+                        var hCommand = this.channelDetails.hypeCommands.Find(x => x.commandText == command.commandText);
+
+                        if (hCommand.pointsCost != 0)
+                        {
+                            var curPoints = this.channelDetails.pointsManager.GetCurrentPlayerPoints(message.Username);
+                            if (curPoints < hCommand.pointsCost)
+                            {
+                                sendMessage($"You have only {curPoints} {(curPoints == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural)}, @{message.Username} . {hCommand.pointsCost} {(hCommand.pointsCost == 1 ? (this.channelDetails.pointsManager.CurrencySingular + " is") : (this.channelDetails.pointsManager.CurrencyPlural + " are"))} required for that command.");
+                                return;
+                            }
+                        }
+
                         var res = new List<string>();
 
                         var timesToRepeat = hCommand.numberOfResponses;
@@ -178,12 +258,19 @@ namespace KomaruBot.ChatBot
 
                             var text = availableTextStrings[idx];
                             availableTextStrings.RemoveAt(idx);
-                            res.Add(text);
+                            res.Add(text.message);
                         }
 
                         foreach (var a in res)
                         {
                             this.sendMessage(a);
+                        }
+
+                        // Deduct after, in case of exception
+                        if (hCommand.pointsCost != 0)
+                        {
+                            long? newPoints;
+                            this.channelDetails.pointsManager.GivePlayerPoints(message.Username, (-1 * hCommand.pointsCost), out newPoints);
                         }
                     }),
                     (Constants.AccessLevel)cmd.accessLevel,
@@ -196,29 +283,36 @@ namespace KomaruBot.ChatBot
         private List<Command> commands = new List<Command>();
         private Command GetCommand(string messageText)
         {
-            foreach (var command in commands)
+            lock (commands)
             {
-                if (command.commandText != null &&
 
-                    // TODO: should we use .Trim() to compare here? want to avoid commands clashing like cmd and cmd1
-                    messageText.StartsWith(command.commandText))
+                foreach (var command in commands)
                 {
-                    return command;
-                }
-            }
+                    if (command.commandText != null &&
 
-            // special command for !xxxx guesses
-            if (messageText.Length == 5 && messageText.StartsWith("!"))
-            {
-                var str = messageText.Remove(0, 1);
-                if (str.Length == 4 && !str.Any(x => !Char.IsDigit(x)))
+                        // TODO: should we use .Trim() to compare here? want to avoid commands clashing like cmd and cmd1
+                        messageText.StartsWith(command.commandText))
+                    {
+                        return command;
+                    }
+                }
+
+                if (this.channelDetails.ceresConfiguration != null && this.channelDetails.ceresConfiguration.ceresEnabled)
                 {
-                    var guessCmd = commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Guess);
-                    return guessCmd;
+                    // special command for !xxxx guesses
+                    if (messageText.Length == 5 && messageText.StartsWith("!"))
+                    {
+                        var str = messageText.Remove(0, 1);
+                        if (str.Length == 4 && !str.Any(x => !Char.IsDigit(x)))
+                        {
+                            var guessCmd = commands.Find(x => x.commandType == Constants.CommandType.Guess);
+                            return guessCmd;
+                        }
+                    }
                 }
-            }
 
-            return null;
+                return null;
+            }
         }
 
         public void connect()
@@ -241,7 +335,7 @@ namespace KomaruBot.ChatBot
 
         public void disconnect()
         {
-            this.ceres.shutdown();
+            this.ceres?.shutdown();
             this.twitchClient.Disconnect();
             this.twitchClient = null;
         }
@@ -261,7 +355,7 @@ namespace KomaruBot.ChatBot
 
                 if (doNotReconnect)
                 {
-                    this.logger.LogInformation("Chat Disconnected. Not attempting to reconnect.", true);
+                    this.logger.LogWarning("Chat Disconnected. Not attempting to reconnect.", true);
                 }
                 else
                 {
@@ -269,9 +363,9 @@ namespace KomaruBot.ChatBot
                     {
                         try
                         {
-                            this.logger.LogInformation($"Chat Disconnected. Trying to reconnect (attempt {reconnectTryCt}) in 15 seconds... ", true);
+                            this.logger.LogWarning($"Chat Disconnected. Trying to reconnect (attempt {reconnectTryCt}) in 15 seconds... ");
                             Thread.Sleep(15000);
-                            this.logger.LogInformation($"Attempt {reconnectTryCt} Connecting...", true);
+                            this.logger.LogWarning($"Attempt {reconnectTryCt} Connecting...");
                             connect();
                         }
                         catch (Exception exc)
@@ -293,7 +387,7 @@ namespace KomaruBot.ChatBot
             try
             {
                 doNotReconnect = true;
-                this.logger.LogInformation($"Incorrect Login Exception Occurred.");
+                this.logger.LogWarning($"Incorrect Login Exception Occurred.");
             }
             catch (Exception exc)
             {
@@ -305,9 +399,7 @@ namespace KomaruBot.ChatBot
         {
             try
             {
-                this.logger.LogInformation("An Exception Occurred Connecting!  Perhaps restarting could help?", true);
-                this.logger.LogInformation($"Error username: {e.BotUsername}");
-                this.logger.LogInformation($"Error message: {e.Error}");
+                this.logger.LogError("An Exception Occurred Connecting!  Perhaps restarting could help? Error username: {e.BotUsername} | Error message: {e.Error}");
             }
             catch (Exception exc)
             {
@@ -338,8 +430,8 @@ namespace KomaruBot.ChatBot
                 var command = GetCommand(e.ChatMessage.Message);
 
                 if ((command == null) ||
-                    (command.requiredRoundStarted && !this.ceres.RoundRunning) ||
-                    (command.requiredRoundNotStarted && this.ceres.RoundRunning)
+                    (this.ceres != null && command.requiredRoundStarted && !this.ceres.RoundRunning) ||
+                    (this.ceres != null && command.requiredRoundNotStarted && this.ceres.RoundRunning)
                     )
                 {
                     return;
@@ -398,7 +490,6 @@ namespace KomaruBot.ChatBot
             sendMessage(msg);
         }
 
-        private static Random random = new Random();
         private Dictionary<string, DateTime> userLastGambles = new Dictionary<string, DateTime>();
         public void Gamble(ChatMessage c)
         {
@@ -438,7 +529,10 @@ namespace KomaruBot.ChatBot
             int gambleAmount;
             if (!int.TryParse(gambleAmountStr, out gambleAmount))
             {
-                sendMessage($"I'm not sure what guess you meant, @{c.Username} . Please enter a new gamble with {(this.commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Gamble).commandText)} [amount]");
+                lock (this.commands)
+                {
+                    sendMessage($"I'm not sure what guess you meant, @{c.Username} . Please enter a new gamble with {(this.commands.Find(x => x.commandType == Constants.CommandType.Gamble).commandText)} [amount]");
+                }
                 return;
             }
 
@@ -479,7 +573,7 @@ namespace KomaruBot.ChatBot
                 }
             }
 
-            var roll = random.Next(1, 101);
+            var roll = rnd.Next(1, 101);
             var multiplier = this.channelDetails.gambleConfiguration.rollResults.FirstOrDefault(x => x.roll == roll);
 
             if (multiplier == null || multiplier.multiplier == 1)

@@ -5,41 +5,67 @@
     <div class="alert alert-success" ng-show="successMessage != null">
         {{successMessage}}
     </div>
-    <div ng-hide="loaded">
-        Loading...
+    <div class="alert alert-info" ng-show="loadingMessage != null">
+        {{loadingMessage}}
     </div>
     <div ng-show="loaded">
         Account Settings:
+        <div style="max-width: 230px;">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" ng-model="botEnabled" id="id_botEnabled">
+                <label class="form-check-label" for="id_botEnabled">
+                    Bot Enabled
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="id_channel">Bot Channel</label>
+                <input type="text" class="form-control" readonly id="id_channel" ng-model="userID">
+            </div>
+            <div class="form-group">
+                <label for="id_streamElementsAccountID">Stream Elements Account ID</label>
+                <input type="password" class="form-control" id="id_streamElementsAccountID" ng-model="streamElementsAccountID">
+            </div>
+            <div class="form-group">
+                <label for="id_streamElementsJWTToken">Stream Elements JWT Token</label>
+                <input type="password" class="form-control" id="id_streamElementsJWTToken" ng-model="streamElementsJWTToken">
+            </div>
+            <div class="form-group">
+                <label for="id_currencySingular">Currency Singular</label>
+                <input type="text" class="form-control" id="id_currencySingular" ng-model="currencySingular">
+            </div>
+            <div class="form-group">
+                <label for="id_currencyPlural">Currency Plural</label>
+                <input type="text" class="form-control" id="id_currencyPlural" ng-model="currencyPlural">
+            </div>
 
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" ng-model="botEnabled" id="id_botEnabled">
-            <label class="form-check-label" for="id_botEnabled">
-                Bot Enabled
-            </label>
-        </div>
-        <div class="form-group">
-            <label for="id_channel">Bot Channel</label>
-            <input type="text" class="form-control" readonly id="id_channel" ng-model="userID">
-        </div>
-        <div class="form-group">
-            <label for="id_streamElementsAccountID">Stream Elements Account ID</label>
-            <input type="text" class="form-control" id="id_streamElementsAccountID" ng-model="streamElementsAccountID">
-        </div>
-        <div class="form-group">
-            <label for="id_streamElementsJWTToken">Stream Elements JWT Token</label>
-            <input type="text" class="form-control" id="id_streamElementsJWTToken" ng-model="streamElementsJWTToken">
-        </div>
-        <div class="form-group">
-            <label for="id_currencySingular">Currency Singular</label>
-            <input type="text" class="form-control" id="id_currencySingular" ng-model="currencySingular">
-        </div>
-        <div class="form-group">
-            <label for="id_currencyPlural">Currency Plural</label>
-            <input type="text" class="form-control" id="id_currencyPlural" ng-model="currencyPlural">
-        </div>
-
-        <div>
-            <button ng-click="saveSettings()" type="button" class="btn btn-success">Save</button>
+            <div>
+                <button ng-click="saveSettings()" type="button" class="btn btn-success">Save</button>
+            </div>
         </div>
     </div>
+
+    <div class="panel panel-info" style="max-width: 750px; margin-top: 10px;">
+        <div class="panel-heading">
+            <h3 class="panel-title">Stream Elements What?</h3>
+        </div>
+        <div class="panel-body">
+
+            Komaru Bot uses <a href="https://streamelements.com/" target="_blank">Stream Elements</a> to keep track of and manage users' points.
+            Your Stream Elements Account ID and JWT Token to authenticate with Stream Elements' API to load, add, and remove users' points.
+            <br />
+            <br />
+            To get your Stream Elements Account ID and API Key, first navigate
+            <a href="https://streamelements.com/dashboard/account/channels" target="_blank">here</a>
+            <ul>
+                <li>
+                    The Account ID should be displayed with your account details.
+                </li>
+                <li>
+                    Click "Show secrets" to show the Stream Elements JWT Token. Make sure to copy the entire token, as it is quite long (It does contain "." (period) characters).
+                </li>
+            </ul>
+
+        </div>
+    </div>
+
 </p>
