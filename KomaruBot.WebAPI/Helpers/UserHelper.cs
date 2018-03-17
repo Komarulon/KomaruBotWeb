@@ -333,6 +333,11 @@ namespace KomaruBot.WebAPI.Helpers
                 return null;
             }
 
+            if (botSettings.basicBotConfiguration == null)
+            {
+                return null;
+            }
+
             if (!botSettings.basicBotConfiguration.botEnabled)
             {
                 return null;

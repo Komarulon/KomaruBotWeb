@@ -121,7 +121,7 @@ namespace KomaruBot.ChatBot
                     if (cmd != null)
                     {
                         var str = $"\"{cmd.commandText} [points]\" - gamble between {this.channelDetails.gambleConfiguration.minBid} " +
-                                  "and {this.channelDetails.gambleConfiguration.maxBid} {this.channelDetails.pointsManager.CurrencyPlural}. ";
+                                  $"and {this.channelDetails.gambleConfiguration.maxBid} {this.channelDetails.pointsManager.CurrencyPlural}. ";
 
                         if (this.channelDetails.gambleConfiguration.minMinutesBetweenGambles == 0)
                         {
@@ -145,8 +145,8 @@ namespace KomaruBot.ChatBot
                         str += a.commandText;
                         if (a.pointsCost > 0)
                         {
-                            var curString = (a.pointsCost == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural);
-                            str += " - Costs " + a.pointsCost + " " + curString + ". ";
+                            //var curString = (a.pointsCost == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural);
+                            str += " - Costs " + a.pointsCost;// + " " + curString + ". ";
                         }
                         strs.Add(str);
                     }
