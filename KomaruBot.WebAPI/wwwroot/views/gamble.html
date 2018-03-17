@@ -9,30 +9,96 @@
         {{loadingMessage}}
     </div>
     <div ng-show="loaded">
-        Gamble Settings:
+        <div class="panel panel-default" style=" margin-top: 10px;">
+            <div class="panel-heading">
+                <h3 class="panel-title">Gambling Settings</h3>
+            </div>
+            <div class="panel-body" style="display: flex;">
+                <div style="float: left; flex: 1">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" ng-model="gambleConfiguration.gambleEnabled" id="id_gambleEnabled">
+                        <label class="form-check-label" for="id_gambleEnabled">
+                            Gamble Enabled
+                        </label>
+                    </div>
+                    <div>
+                        <div style="float: left;">
+                            <div class="form-group">
+                                <label for="id_gambleCommand">Gamble Command</label>
+                                <input style="width: 200px;" type="text" class="form-control" id="id_gambleCommand" ng-model="gambleConfiguration.gambleCommand">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_minbid">Minimum Gamble</label>
+                                <input style="width: 200px;" type="number" class="form-control" id="id_minbid" ng-model="gambleConfiguration.minBid">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_maxbid">Maximum Gamble</label>
+                                <input style="width: 200px;" type="number" class="form-control" id="id_maxbid" ng-model="gambleConfiguration.maxBid">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_minminutes">Minimum Minutes Between Gambles</label>
+                                <input style="width: 200px;" type="number" class="form-control" id="id_minminutes" ng-model="gambleConfiguration.minMinutesBetweenGambles">
+                            </div>
+                        </div>
+                        <div style="float: left; margin-left: 15px; border: 1px solid #CCC;">
+                            <div class="form-group" style="margin-left: 5px; margin-top: 5px;">
+                                <label style="display: inline-block;">Average Gamble Result</label>
+                                <input style="width: 200px; display: inline-block;"
+                                       ng-class="{'color-red': (getTotalAmountOfMoneyWon(gambleConfiguration)) < 0, 'color-green': getTotalAmountOfMoneyWon(gambleConfiguration) > 0}"
+                                       type="number" class="form-control" readonly ng-value="getTotalAmountOfMoneyWon(gambleConfiguration)">
+                            </div>
 
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" ng-model="gambleEnabled" id="id_gambleEnabled">
-            <label class="form-check-label" for="id_gambleEnabled">
-                Gamble Enabled
-            </label>
-        </div>
+                            <table class="table table-striped table-sm" style="margin-bottom: 0px;">
+                                <thead style="display: block;">
+                                    <tr>
+                                        <th style="width: 75px;" scope="col">Roll</th>
+                                        <th style="width: 150px;" scope="col">Result Multiplier</th>
+                                        <th style="width: 170px;" scope="col">Example Payout of 100 Points Buy-In</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="max-height: 500px; overflow-y: scroll; display: block;">
+                                    <tr ng-repeat="gambleRoll in gambleConfiguration.rollResults track by $index" style="width: 100%; display: block;">
+                                        <td style="width: 75px;">
+                                            {{gambleRoll.roll}}
+                                        </td>
+                                        <td style="width: 150px;">
+                                            <input style="width: 100px;" type="number" class="form-control" ng-model="gambleRoll.multiplier" min="0" step="0.01">
+                                        </td>
+                                        <td style="width: 170px;">
+                                            {{getAmountAwardedForRoll(gambleRoll.multiplier, 100)}}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <br style="clear: both;" />
+                    </div>
 
-        <div class="form-group">
-            <label for="id_minbid">Minimum Gamble</label>
-            <input type="number" class="form-control" id="id_minbid" ng-model="minBid">
-        </div>
-        <div class="form-group">
-            <label for="id_maxbid">Maximum Gamble</label>
-            <input type="number" class="form-control" id="id_maxbid" ng-model="maxBid">
-        </div>
-        <div class="form-group">
-            <label for="id_minminutes">Minimum Minutes Between Gambles</label>
-            <input type="number" class="form-control" id="id_minminutes" ng-model="minMinutesBetweenGambles">
-        </div>
+                    <div>
+                        <button ng-click="saveSettings()" type="button" class="btn btn-success">Save Changes</button>
+                    </div>
 
-        <div>
-            <button ng-click="saveSettings()" type="button" class="btn btn-success">Save</button>
+                </div>
+
+                <div style="float: left; flex: 1;">
+                    <div class="panel panel-info" style="margin-top: 10px;">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Gambling</h3>
+                        </div>
+                        <div class="panel-body">
+                            When a user uses the gamble command, they gamble with a buy-in of Loyalty Points (e.g. !gamble 100 to gamble 100 Loyalty Points).
+                            KomaruBot then rolls a 100-sided die, and uses the above table to determine the result.
+                            <br /><br />
+                            Gambling has a 30-second timeout per user, if the timeout is set to 0.
+                            <br /><br />
+                            The "Average Gamble Result" is what would happen if a perfect die distrubution happened. If a viewer bought in with 100 Loyalty Points, 100 times,
+                            and rolled a 1, rolled a 2, rolled a 3, ... rolled a 100, Then the "Average Gamble Result" is the amount of Loyalty Points they gain or lose. It is
+                            recommended that the configuration of gambling be set to a positive amount (otherwise it is disadvantageous to gamble and viewers are more likely to lose)
+                        </div>
+                    </div>
+                </div>
+                <br style="clear: both;" />
+            </div>
         </div>
     </div>
 </p>

@@ -1,0 +1,42 @@
+﻿<p>
+    <div class="alert alert-danger" ng-show="errorMessage != null">
+        {{errorMessage}}
+    </div>
+    <div class="alert alert-success" ng-show="successMessage != null">
+        {{successMessage}}
+    </div>
+    <div class="alert alert-info" ng-show="loadingMessage != null">
+        {{loadingMessage}}
+    </div>
+    <div ng-show="loaded">
+        <div class="panel panel-default" style=" margin-top: 10px;">
+            <div class="panel-heading">
+                <h3 class="panel-title">Export/Download backup file</h3>
+            </div>
+            <div class="panel-body">
+                <a class="btn btn-primary" ng-href="{{exportLink}}" role="button">Download</a>
+                <br />
+                <br />
+                It is recommended that you download your settings once you are done with them. 
+                I do not know the future of where KomaruBot will live on the web, and if I move it I might not be able to copy the database.
+            </div>
+        </div>
+    </div>
+
+    <div ng-show="loaded">
+        <div class="panel panel-default" style=" margin-top: 10px;">
+            <div class="panel-heading">
+                <h3 class="panel-title">Import Settings from backup file</h3>
+            </div>
+            <div class="panel-body">
+                <input type="file" id="selectFiles" value="Import" /><br />
+                <a class="btn btn-primary" ng-click="importFile()" role="button">Import</a>
+                <br />
+                <br />
+                <div style="white-space: pre-line;">
+                    {{ImportLog}}
+                </div>
+            </div>
+        </div>
+    </div>
+</p>

@@ -16,13 +16,14 @@ angular.module('KomaruBot')
     $scope.streamElementsAccountID = null;
     $scope.currencySingular = null;
     $scope.currencyPlural = null;
-    $scope.botEnabled = false;
+    $scope.basicBotConfiguration = null;
 
     $scope.loaded = false;
     $scope.loadingMessage = "Loading...";
     $scope.errorMessage = null;
     $scope.successMessage = null;
-    
+
+    $scope.originallyBotEnabled = false;
 
     $.PerformHttpRequest({
         type: "GET",
@@ -37,7 +38,9 @@ angular.module('KomaruBot')
             $scope.streamElementsAccountID = json.streamElementsAccountID;
             $scope.currencySingular = json.currencySingular;
             $scope.currencyPlural = json.currencyPlural;
-            $scope.botEnabled = json.botEnabled;
+            $scope.basicBotConfiguration = json.basicBotConfiguration;
+
+            $scope.originallyBotEnabled = json.botEnabled;
 
             $scope.loaded = true;
             $scope.loadingMessage = null;
@@ -66,7 +69,7 @@ angular.module('KomaruBot')
             currencySingular: $scope.currencySingular,
             currencyPlural: $scope.currencyPlural,
             userID: $scope.userID,
-            botEnabled: $scope.botEnabled,
+            basicBotConfiguration: $scope.basicBotConfiguration,
         };
 
         $scope.loadingMessage = "Saving Account settings...";
@@ -81,14 +84,25 @@ angular.module('KomaruBot')
             loadingIcon: null,
             error: null,
             success: function (json) {
-
                 $scope.loadingMessage = null;
                 $scope.errorMessage = null;
-                $scope.successMessage = "Account settings saved.";
+
+                if ($scope.originallyBotEnabled == false && model.botEnabled)
+                {
+                    $scope.successMessage = "Account settings saved. Bot is now enabled. Make sure to check other tabs to enable features you want on.";
+                }
+                else
+                {
+                    $scope.successMessage = "Account settings saved.";    
+                }
+
+                $scope.originallyBotEnabled = model.botEnabled;
+
                 $scope.$apply();
 
                 setTimeout(function () {
-                    if ($scope.successMessage == "Account settings saved.") {
+                    if ($scope.successMessage == "Account settings saved." ||
+                        $scope.successMessage == "Account settings saved. Bot is now enabled. Make sure to check other tabs to enable features you want on.") {
                         $scope.successMessage = null;
                         $scope.$apply();
                     }

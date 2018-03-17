@@ -20,7 +20,7 @@ namespace KomaruBot.ChatBot
         private ILogger logger;
         public ChatBotManager(
             ILogger logger,
-            string chatBotTwitchUsername, 
+            string chatBotTwitchUsername,
             string chatBotTwitchOauthToken)
         {
             this.logger = logger;
@@ -29,6 +29,21 @@ namespace KomaruBot.ChatBot
         }
 
         private Dictionary<string, ChatBotConnection> chatBots = new Dictionary<string, ChatBotConnection>();
+
+        /// <summary>
+        /// Periodically clean up extra memory objects from the bot
+        /// </summary>
+        public void PeriodicCleanup()
+        {
+            lock (chatBots)
+            {
+                foreach (var a in chatBots)
+                {
+                    a.Value.cleanupTimeouts();
+                }
+            }
+        }
+
 
         public void UnregisterConnection(string channelName)
         {
@@ -43,6 +58,11 @@ namespace KomaruBot.ChatBot
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="channel"></param>
+        /// <returns>If a new bot was created or not</returns>
         public bool RegisterConnection(ClientConfiguration channel)
         {
             lock (chatBots)
@@ -61,14 +81,17 @@ namespace KomaruBot.ChatBot
 
         // TODO: if settings are the same, don't update!
 
-        public void UpdateConnection(string channelName, IPointsManager pointsManager)
+        public void UpdateConnection(
+            string channelName, 
+            IPointsManager pointsManager, 
+            BasicBotConfiguration basicConfig)
         {
             lock (chatBots)
             {
                 ChatBotConnection bot;
                 if (chatBots.TryGetValue(channelName, out bot))
                 {
-                    bot.ConfigurePointsManager(pointsManager);
+                    bot.ConfigurePointsManager(basicConfig, pointsManager);
                 }
             }
         }

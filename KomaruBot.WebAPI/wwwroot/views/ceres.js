@@ -28,7 +28,7 @@ angular.module('KomaruBot')
         loadingIcon: null,
         error: null,
         success: function (json) {
-            $scope.ceresEnabled = json.ceresConfiguration.ceresEnabled;
+            $scope.ceresConfiguration = json.ceresConfiguration;
 
             $scope.loaded = true;
             $scope.loadingMessage = null;
@@ -53,9 +53,7 @@ angular.module('KomaruBot')
     $scope.saveSettings = function () {
         var model = {
             userID: $scope.userID,
-            ceresConfiguration: {
-                ceresEnabled: $scope.ceresEnabled,
-            }
+            ceresConfiguration: $scope.ceresConfiguration,
         };
 
         $scope.loadingMessage = "Saving Ceres settings...";
@@ -96,5 +94,107 @@ angular.module('KomaruBot')
                 $scope.$apply();
             },
         });
+    };
+
+    $scope.anyNullClosestRewards = function (ceresConfig) {
+        if (ceresConfig == null) { return true; }
+
+        for (var i = 0; i < ceresConfig.closestRewards.length; i++) {
+            var response = ceresConfig.closestRewards[i];
+
+            if (response.rankAwarded === "" || 
+                response.pointsAwarded === "" || response.pointsAwarded == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    $scope.addClosestReward = function (ceresConfig) {
+        var highestRank = 0;
+        for (var i = 0; i < ceresConfig.closestRewards.length; i++) {
+            var response = ceresConfig.closestRewards[i];
+            if (response.rankAwarded > highestRank) {
+                highestRank = response.rankAwarded;
+            }   
+        }
+
+        ceresConfig.closestRewards.push({ rankAwarded: highestRank + 1, pointsAwarded: 0, awardEvenIfOtherWinners: false, });
+    };
+
+    $scope.removeClosestReward = function (ceresConfig, idx) {
+        ceresConfig.closestRewards.splice(idx, 1);
+    };
+
+
+
+
+    $scope.anyNullStaticRewards = function (ceresConfig) {
+        if (ceresConfig == null) { return true; }
+
+        for (var i = 0; i < ceresConfig.staticRewards.length; i++) {
+            var response = ceresConfig.staticRewards[i];
+
+            if (response.hundrethsLeewayStart === "" ||
+                response.hundrethsLeewayEnd === "" ||
+                response.pointsAwarded === "" || response.pointsAwarded == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    $scope.addStaticReward = function (ceresConfig) {
+        var highestLeewayEnd = -1;
+        for (var i = 0; i < ceresConfig.staticRewards.length; i++) {
+            var response = ceresConfig.staticRewards[i];
+            if (response.hundrethsLeewayEnd > highestLeewayEnd) {
+                highestLeewayEnd = response.hundrethsLeewayEnd;
+            }
+        }
+
+        ceresConfig.staticRewards.push({ hundrethsLeewayStart: highestLeewayEnd + 1, hundrethsLeewayEnd: highestLeewayEnd + 1, pointsAwarded: 0, });
+    };
+
+    $scope.removeStaticReward = function (ceresConfig, idx) {
+        ceresConfig.staticRewards.splice(idx, 1);
+    };
+
+    $scope.fixStaticRewardRange = function (reward) {
+        if (reward.hundrethsLeewayStart < 0) {
+            reward.hundrethsLeewayStart = 0;
+        }
+        if (reward.hundrethsLeewayEnd < 0) {
+            reward.hundrethsLeewayEnd = 0;
+        }
+        if (reward.hundrethsLeewayEnd < reward.hundrethsLeewayStart) {
+            reward.hundrethsLeewayEnd = reward.hundrethsLeewayStart;
+        }
+    };
+
+
+    $scope.anyNullMagicTimes = function (ceresConfig) {
+        if (ceresConfig == null) { return true; }
+
+        for (var i = 0; i < ceresConfig.magicTimes.length; i++) {
+            var response = ceresConfig.magicTimes[i];
+
+            if (response.ceresTime === "" ||
+                response.pointsAwarded === "" || response.pointsAwarded == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    $scope.addMagicTime = function (ceresConfig) {
+        ceresConfig.magicTimes.push({ ceresTime: 4700, pointsAwarded: 0, });
+    };
+
+    $scope.removeMagicTime = function (ceresConfig, idx) {
+        ceresConfig.magicTimes.splice(idx, 1);
     };
 }]);

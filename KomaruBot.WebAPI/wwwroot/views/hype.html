@@ -9,72 +9,149 @@
         {{loadingMessage}}
     </div>
     <div ng-show="loaded">
-        <div style="margin-bottom: 15px;">
-            <button ng-click="saveSettings()" type="button" class="btn btn-success">Save Changes</button>
-        </div>
-
-        <div>
-            <div ng-repeat="hc in hypeCommands">
-                <div class="panel panel-default" style="width: 530px;">
-                    <div class="panel-heading">
-                        <div class="form-group" style="margin-bottom: -15px;">
-                            <input type="text" class="form-control" ng-model="hc.commandText">
-                            <input class="form-check-input" type="checkbox" ng-model="hc.enabled" ng-attr-id="{{'id_commandEnabled_' + hc.id}}">
-                            <label class="form-check-label" ng-attr-for="{{'id_commandEnabled_' + hc.id}}">Command Enabled</label>
-                            <select ng-model="hc.accessLevel" ng-options="opt.id as opt.label for opt in accessLevels"></select>
-                            <button type="button" class="btn btn-link" ng-click="hc.ShowHide = !hc.ShowHide">Show/Hide</button>
-                        </div>
-                    </div>
-                    <div class="panel-body" ng-show="hc.ShowHide">
-                        <div class="form-group">
-                            <label style="display: inline-block;">Cost: </label>
-                            <input style="display: inline-block; width: 200px;" type="number" class="form-control" ng-model="hc.pointsCost">
-                        </div>
-
-                        <div class="panel panel-default">
+        <div class="panel panel-default" style=" margin-top: 10px;">
+            <div class="panel-heading">
+                <h3 class="panel-title">Hype Commands Settings</h3>
+            </div>
+            <div class="panel-body" style="display: flex;">
+                <div style="float: left; flex: 1">
+                    <div ng-repeat="hc in hypeCommands track by $index">
+                        <div class="panel panel-default" style="width: 530px;">
                             <div class="panel-heading">
-                                <h3 class="panel-title">
-                                    <div style="float: left;">
-                                        Responses
-                                    </div>
-                                    <div style="float: right;">
-                                        <input class="form-check-input" type="checkbox" ng-model="hc.randomizeResponseOrders" ng-attr-id="{{'id_randomized_' + hc.id}}">
-                                        <label class="form-check-label" ng-attr-for="{{'id_randomized_' + hc.id}}">
-                                            Randomize
-                                        </label>
-                                    </div>
-                                    <br style="clear: both;" />
-                                </h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <label style="display: inline-block;">Number of Responses from Bot: </label>
-                                    <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="hc.numberOfResponses">
+                                <div class="form-group" style="margin-bottom: -15px;">
+                                    <input type="text" class="form-control" ng-model="hc.commandText">
+                                    <input class="form-check-input" type="checkbox" ng-model="hc.enabled" ng-attr-id="{{'id_commandEnabled_' + hc.id}}">
+                                    <label class="form-check-label" ng-attr-for="{{'id_commandEnabled_' + hc.id}}">Command Enabled</label>
+                                    <select ng-model="hc.accessLevel" ng-options="opt.id as opt.label for opt in accessLevels"></select>
+                                    <button type="button" class="btn btn-link" ng-click="hc.ShowHide = !hc.ShowHide">Show/Hide</button>
                                 </div>
-                                <div ng-repeat="response in hc.commandResponses track by $index">
-                                    <div class="form-group">
+                            </div>
+                            <div class="panel-body" ng-show="hc.ShowHide">
+                                <div class="form-group">
+                                    <label style="display: inline-block;">Cost: </label>
+                                    <input style="display: inline-block; width: 200px;" type="number" class="form-control" ng-model="hc.pointsCost">
+                                </div>
 
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" placeholder="Bot will say.." ng-model="response.message">
-                                            <span class="input-group-btn">
-                                                <button class="btn btn-danger" ng-click="removeResponse(hc, $index)">
-                                                    Remove
-                                                </button>
-                                            </span>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">
+                                            <div style="float: left;">
+                                                Responses
+                                            </div>
+                                            <div style="float: right;">
+                                                <input class="form-check-input" type="checkbox" ng-model="hc.randomizeResponseOrders" ng-attr-id="{{'id_randomized_' + hc.id}}">
+                                                <label class="form-check-label" ng-attr-for="{{'id_randomized_' + hc.id}}">
+                                                    Randomize
+                                                </label>
+                                            </div>
+                                            <br style="clear: both;" />
+                                        </h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="form-group">
+                                            <label style="display: inline-block;">Number of Responses from Bot: </label>
+                                            <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="hc.numberOfResponses">
+                                        </div>
+                                        <div ng-repeat="response in hc.commandResponses track by $index">
+                                            <div class="form-group">
+
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" placeholder="Bot will say.." ng-model="response.message">
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-danger" ng-click="removeResponse(hc, $index)">
+                                                            Remove
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div ng-hide="anyNullResponses(hc)">
+                                            <button type="button" class="btn btn-success" ng-click="addResponse(hc)">Add Response</button>
                                         </div>
                                     </div>
                                 </div>
-                                <div ng-hide="anyNullResponses(hc)">
-                                    <button type="button" class="btn btn-success" ng-click="addResponse(hc)">Add Response</button>
-                                </div>
+                                <button class="btn btn-danger" ng-click="removeHypeCommand(hypeCommands, $index)">
+                                    Remove Command
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button style="margin-bottom: 15px;" type="button" class="btn btn-success" ng-click="addHypeCommand()">New Command</button>
+
+                    <div>
+                        <button ng-click="saveSettings()" type="button" class="btn btn-success">Save Changes</button>
+                    </div>
+                </div>
+                <div style="float: left; flex: 1">
+                    <div class="panel panel-info" style="margin-top: 10px;">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Hype Commands</h3>
+                        </div>
+                        <div class="panel-body">
+
+                            Hype Commands are commands that can be triggered by viewers, potentially at the cost of Loyalty Points.
+                            These cause a "spammy" response by the bot, and are fairly configurable.
+                            <br /><br />
+                            Hype Commands have a 30-second timeout per user
+                            <br /><br />
+                            Configuration Options:
+                            <ul>
+                                <li>
+                                    Command Text: What a viewer types to activate this command
+                                </li>
+                                <li>
+                                    Command Enabled: Turn this command on/off
+                                </li>
+                                <li>
+                                    Access Level: Make the command usable by the public, moderators+broadcaster, or broadcaster only
+                                </li>
+                                <li>
+                                    Cost: How many Loyalty Points this command costs
+                                </li>
+                                <li>
+                                    Responses Randomized: If checked, responses from the list are picked at random. If not, they're read in order.
+                                </li>
+                                <li>
+                                    Number of Responses: The number of Individual Chat Messages the bot responds with.
+                                    If this value is less than the number of responses in the list, and the list is not randomized,
+                                    the responses at the end of the list will never be said.
+                                    You can put a large number (like "9999") so that way it will read all messages
+                                </li>
+                                <li>
+                                    Response: An Individual Chat Message the bot will respond with.
+                                </li>
+                            </ul>
+
+                            These options can be configured to make an interesting bot. For example, you could make a BlessRNG Chant:
+                            <div class="well">
+                                !blessrng
+                                <br />Cost: 50
+                                <br />Responses Randomized: no
+                                <br />Number of Responses: 999
+                                <br />Responses:
+                                <br />GivePLZ BlessRNG TakeNRG
+                                <br />GivePLZ BlessRNG We are in dire need of good RNG BlessRNG TakeNRG
+                                <br />GivePLZ BlessRNG Please give us the best RNG BlessRNG TakeNRG
+                                <br />GivePLZ BlessRNG May we roll a 20 every roll and always get good drops BlessRNG TakeNRG
+                                <br />GivePLZ BlessRNG TakeNRG
+                            </div>
+
+                            <br />
+                            Or use randomize responses to make a fun command:
+                            <div class="well">
+                                !something
+                                <br />Cost: 75
+                                <br />Responses Randomized: yes
+                                <br />Number of Responses: 3
+                                <br />Responses:
+                                <br />(A bunch of funny quotes from your channel)
                             </div>
                         </div>
                     </div>
                 </div>
+                <br style="clear: both;"/>
             </div>
-
-            <button type="button" class="btn btn-success" ng-click="addHypeCommand()">New Command</button>
-
         </div>
     </div>
 </p>

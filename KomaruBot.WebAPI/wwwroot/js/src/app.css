@@ -7,19 +7,27 @@
     padding: 0 0 0.5em;
 }
 
-    .menu:before {
-        content: "[";
-    }
+.menu:before {
+    content: "[";
+}
 
-    .menu:after {
-        content: "]";
-    }
+.menu:after {
+    content: "]";
+}
 
-    .menu > li {
-        display: inline;
-    }
+.menu > li {
+    display: inline;
+}
 
-    .menu > li + li:before {
-        content: "|";
-        padding-right: 0.3em;
-    }
+.menu > li + li:before {
+    content: "|";
+    padding-right: 0.3em;
+}
+
+.color-green {
+    color: #00CC00 !important;
+}
+
+.color-red {
+    color: #CC0000 !important;
+}

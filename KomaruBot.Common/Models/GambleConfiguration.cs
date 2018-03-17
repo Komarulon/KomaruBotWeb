@@ -10,6 +10,7 @@ namespace KomaruBot.Common.Models
         public int maxBid { get; set; }
         public bool gambleEnabled { get; set; }
         public int minMinutesBetweenGambles { get; set; }
+        public string gambleCommand { get; set; }
         public List<GambleRewards> rollResults { get; set; }
     }
 

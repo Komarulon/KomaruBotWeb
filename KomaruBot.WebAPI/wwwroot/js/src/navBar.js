@@ -21,6 +21,7 @@ angular.module('KomaruBot')
     }
 
     $scope.logOut = function () {
+        console.log("ASDF");
         window.sessionStorage.removeItem("username");
         window.sessionStorage.removeItem("accesstoken");
         $location.path('/preauth');

@@ -72,7 +72,7 @@ namespace KomaruBot.WebAPI.Controllers
                 var validationResult = settings.validate();
                 if (validationResult != System.ComponentModel.DataAnnotations.ValidationResult.Success)
                 {
-                    return StatusCode((int)System.Net.HttpStatusCode.BadRequest, validationResult.ErrorMessage);
+                    return StatusCode((int)System.Net.HttpStatusCode.BadRequest, new { message = validationResult.ErrorMessage });
                 }
 
                 this.userHelper.SaveSettings(settings);

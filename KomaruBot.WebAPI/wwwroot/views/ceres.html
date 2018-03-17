@@ -9,17 +9,186 @@
         {{loadingMessage}}
     </div>
     <div ng-show="loaded">
-        Ceres Settings:
+        <div class="panel panel-default" style=" margin-top: 10px;">
+            <div class="panel-heading">
+                <h3 class="panel-title">Ceres Guessing Settings</h3>
+            </div>
+            <div class="panel-body">
 
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" ng-model="ceresEnabled" id="id_ceresEnabled">
-            <label class="form-check-label" for="id_ceresEnabled">
-                Ceres Enabled
-            </label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" ng-model="ceresConfiguration.ceresEnabled" id="id_ceresEnabled">
+                    <label class="form-check-label" for="id_ceresEnabled">
+                        Ceres Enabled
+                    </label>
+
+                    <div class="form-group">
+                        <label style="display: inline-block;">Seconds To Guess: </label>
+                        <input style="display: inline-block; width: 200px;" type="number" class="form-control" ng-model="ceresConfiguration.numberOfSecondsToGuess">
+                    </div>
+
+                    <div>
+                        <div class="panel panel-default" style="float: left;">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    Static Rewards
+                                    <br />
+                                    (Guesses xx.xx away from exact win)
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <div ng-repeat="reward in ceresConfiguration.staticRewards track by $index">
+                                    <div class="panel panel-default">
+                                        <div class="panel-body" style="position: relative;">
+                                            <div>
+                                                <label style="display: inline-block;">Guesses off by (1/100ths of a second): </label>
+                                                <br />
+                                                <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="reward.hundrethsLeewayStart" ng-change="fixStaticRewardRange(reward)">
+                                                <div style="display: inline-block;"> to </div>
+                                                <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="reward.hundrethsLeewayEnd" ng-change="fixStaticRewardRange(reward)">
+                                            </div>
+                                            <div style="margin-top: 5px;">
+                                                <label style="display: inline-block;">win this many points: </label>
+                                                <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="reward.pointsAwarded">
+                                            </div>
+                                            <button class="btn btn-danger" ng-click="removeStaticReward(ceresConfiguration, $index)">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-hide="anyNullStaticRewards(ceresConfiguration)">
+                                    <button type="button" class="btn btn-success" ng-click="addStaticReward(ceresConfiguration)">Add Reward</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel panel-default" style="float: left; margin-left: 10px;">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    Closest Rewards
+                                    <br />
+                                    (Guesses closest to actual time win)
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <div ng-repeat="reward2 in ceresConfiguration.closestRewards track by $index">
+                                    <div class="panel panel-default">
+                                        <div class="panel-body" style="position: relative;">
+                                            <div>
+                                                <label style="display: inline-block;">Guesses at rank</label>
+                                                <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="reward2.rankAwarded">
+                                            </div>
+                                            <div style="margin-top: 5px;">
+                                                <label style="display: inline-block;">win this many points: </label>
+                                                <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="reward2.pointsAwarded">
+                                            </div>
+                                            <div style="margin-top: 5px;">
+                                                <input class="form-check-input" type="checkbox" ng-model="reward2.awardEvenIfOtherWinners">
+                                                <label style="display: inline-block;">even if won static rewards</label>
+                                            </div>
+                                            <button class="btn btn-danger" ng-click="removeClosestReward(ceresConfiguration, $index)">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-hide="anyNullClosestRewards(ceresConfiguration)">
+                                    <button type="button" class="btn btn-success" ng-click="addClosestReward(ceresConfiguration)">Add Reward</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel panel-default" style="float: left; margin-left: 10px;">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    Magic Times
+                                    <br />
+                                    (Ceres ending awards everyone)
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <div ng-repeat="magicTime in ceresConfiguration.magicTimes track by $index">
+                                    <div class="panel panel-default">
+                                        <div class="panel-body" style="position: relative;">
+                                            <div>
+                                                <label style="display: inline-block;">If Ceres ends at </label>
+                                                <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="magicTime.ceresTime">
+                                            </div>
+                                            <div style="margin-top: 5px;">
+                                                <label style="display: inline-block;">All guesses wins this many points: </label>
+                                                <input style="display: inline-block; width: 100px;" type="number" class="form-control" ng-model="magicTime.pointsAwarded">
+                                            </div>
+                                            <button class="btn btn-danger" ng-click="removeMagicTime(ceresConfiguration, $index)">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-hide="anyNullMagicTimes(ceresConfiguration)">
+                                    <button type="button" class="btn btn-success" ng-click="addMagicTime(ceresConfiguration)">Add Magic Time</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br style="clear: both;" />
+                    </div>
+                </div>
+
+                <div>
+                    <button ng-click="saveSettings()" type="button" class="btn btn-success">Save Changes</button>
+                </div>
+            </div>
         </div>
+    </div>
+    <div class="panel panel-info" style="margin-top: 10px;">
+        <div class="panel-heading">
+            <h3 class="panel-title">Ceres Guessing</h3>
+        </div>
+        <div class="panel-body">
+            Ceres Guessing is controlled by moderators, and guesses are input by viewers (or moderators too).
+            <br />
+            To start a round, have a mod say "!startceres". This triggers a new round, and viewers, mods, and broadcaster can start guessing times.
+            <br />
+            After the amount of alloted seconds, KomaruBot will announce that the guessing has ended. In case someone didn't guess in time, it stops collecting guesses 5 seconds later.
+            <br />
+            Guesses can be added via "!guess 1234" or "!1234", where "1234" is the guess time (45:69 is represented as 4569).
+            <br />
+            The round can be canceled at any time via "!cancelceres", or ended via "!endceres 1234" where "1234" is the end time.
+            <br />
+            Points are then awarded to users based on how close they were to the actual time.
+            <br />
+            <br />
+            There are multiple types of awards:
+            <br />
+            <br />
+            <div class="well">
+                <h3>Static Rewards</h3>
+                Static awards are awarded first. These are awarded to users who guess exactly or near exactly the time.
+                <br /><br />
+                For example, if you specify:
+                <br />
+                Guesses off by (1/100ths of a second) 0 - 0 win 1000 points, 
+                <br />
+                guesses off by (1/100ths of a second) 1 - 2 win 500 points, 
+                <br />
+                and ceres ends at 46:00, and a viewer guesses exactly (with 0 1/100ths of a second), they win 1000 points. If the viewer guessed 46:01, 46:02, 45:99, or 45:98, they win 500 points.
+            </div>
 
-        <div>
-            <button ng-click="saveSettings()" type="button" class="btn btn-success">Save</button>
+            <div class="well">
+                <h3>Closest Rewards</h3>
+                Closest awards are awarded after static rewards.
+                If any users won static rewards for guessing very close, these rewards will not be given out unless the "even if won static rewards" checkbox is checked.
+                <br />
+                When awarding these rewards, all guesses are ranked together.
+                <br /><br />
+                For example, if 2 viewers were off by 00:02, and 1 off by 00:03, the ranks will be: 1st, 1st, 3rd.
+                Then, those viewers get the reward for their rank.
+            </div>
+            <div class="well">
+                <h3>Magic Times</h3>
+                Magic Times Rewards are awarded when Ceres ends on a particular time.
+                If any of those times are the actual ceres time exactly, every viewer who guessed gets the reward.
+            </div>
         </div>
     </div>
 </p>

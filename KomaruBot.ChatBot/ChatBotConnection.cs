@@ -43,240 +43,470 @@ namespace KomaruBot.ChatBot
             lock (this.commands)
             {
                 this.connect();
-                this.ConfigureCeres();
-                this.ConfigureHype();
-                this.ConfigureGamble();
-                this.ConfigurePointsManager();
+                this.ConfigureCeres(this.channelDetails.ceresConfiguration);
+                this.ConfigureHype(this.channelDetails.hypeCommands);
+                this.ConfigureGamble(this.channelDetails.gambleConfiguration);
+                this.ConfigurePointsManager(this.channelDetails.basicConfiguration, this.channelDetails.pointsManager);
             }
         }
 
-        public void ConfigurePointsManager(IPointsManager newSettings = null)
+        public void ConfigurePointsManager(BasicBotConfiguration basicBotConfigurationCommand, IPointsManager newSettings)
         {
-            if (newSettings != null)
+            lock (this.commands)
             {
                 this.channelDetails.pointsManager = newSettings;
+
+                this.commands.RemoveAll(x => x.commandType == Constants.CommandType.GetPoints ||
+                                             x.commandType == Constants.CommandType.Help);
+
+                this.commands.Add(new Command(Constants.CommandType.GetPoints, (message, cmd) =>
+                    {
+                        var points = this.channelDetails.pointsManager.GetCurrentPlayerPoints(message.Username);
+                        var curString = (points == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural);
+                        this.sendMessage($"{message.Username} has {points} {curString}");
+                    },
+                    Constants.AccessLevel.Public,
+                    false,
+                    false,
+                    basicBotConfigurationCommand.queryPointsCommand,
+                    false,
+                    null,
+                    30
+                ));
+
+                this.commands.Add(new Command(Constants.CommandType.Help, (message, cmd) =>
+                    {
+                        this.sendMessage(this._helpString);
+                    },
+                    Constants.AccessLevel.Public,
+                    false,
+                    false,
+                    basicBotConfigurationCommand.helpCommand,
+                    false,
+                    20,
+                    null
+                ));
+
+                updateHelpString();
             }
         }
 
-        public void ConfigureCeres(CeresConfiguration newSettings = null)
+        private object _helpLock = new object();
+        private string _helpString;
+        private void updateHelpString()
         {
-            if (newSettings != null)
+            lock (_helpLock)
             {
-                this.channelDetails.ceresConfiguration = newSettings;
-            }
-
-            if (this.channelDetails.ceresConfiguration != null && this.channelDetails.ceresConfiguration.ceresEnabled)
-            {
-                // only use the one ceres object. If the user turns it off and then on again we want to keep this round going
-                if (this.ceres == null)
+                var strs = new List<string>();
+                var cmd = this.commands.Find(x => x.commandType == Constants.CommandType.GetPoints);
+                if (cmd != null)
                 {
-                    this.ceres = new CeresGuessingGame(
-                        logger,
-                        channelDetails.channelName,
-                        () =>
-                        {
-                        // On begin guessing
-                        lock (this.commands)
-                            {
-                                this.sendMessage($"Ceres round started. Type {(this.commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Guess).commandText)} xxxx to register your Ceres time guess. You have {CeresGuessingGame.secondsToGuess} seconds to place your guess.");
-                            }
-                        },
-                        () =>
-                        {
-                        // On round canceled
-                        this.sendMessage("Ceres round cancelled.");
-                        },
-                        () =>
-                        {
-                        // On round finished
-                        this.sendMessage("Ceres round completed or something.");
-                        },
-                        () =>
-                        {
-                        // On guessing time finished
-                        this.sendMessage($"Ceres time guessing has ended. Good luck!");
-                        });
+                    strs.Add($"\"{cmd.commandText}\" - get your current {this.channelDetails.pointsManager.CurrencyPlural}");
                 }
 
-                this.commands.Add(new Command(
-                    Constants.CommandType.StartCeres,
-                    new Action<ChatMessage, Command>((message, command) =>
+                if (this.ceres != null)
+                {
+                    cmd = this.commands.Find(x => x.commandType == Constants.CommandType.Guess);
+                    if (cmd != null)
                     {
-                        this.ceres.beginGuessing();
-                    }),
-                    Constants.AccessLevel.Moderator,
-                    false,
-                    true,
-                    "!startceres"
-                ));
+                        strs.Add($"\"{cmd.commandText} [guess (4 digits)]\" - during a live ceres round, enter a guess to win {this.channelDetails.pointsManager.CurrencyPlural}");
+                    }
+                }
 
-                this.commands.Add(new Command(
-                    Constants.CommandType.EndCeres,
-                    new Action<ChatMessage, Command>((message, command) =>
+                if (this.channelDetails.gambleConfiguration != null && this.channelDetails.gambleConfiguration.gambleEnabled)
+                {
+                    cmd = this.commands.Find(x => x.commandType == Constants.CommandType.Gamble);
+                    if (cmd != null)
                     {
-                        string endtime = new string(message.Message.Where(Char.IsDigit).ToArray()); // linq magic to extract any leading/trailing chars
+                        strs.Add($"\"{cmd.commandText} [points]\" - gamble between {this.channelDetails.gambleConfiguration.minBid} and {this.channelDetails.gambleConfiguration.maxBid} {this.channelDetails.pointsManager.CurrencyPlural}. {this.channelDetails.gambleConfiguration.minMinutesBetweenGambles} timeout.");
+                    }
+                }
 
-                        if (endtime.Length != 4)
+                if (this.channelDetails.hypeCommands.Any())
+                {
+                    foreach (var a in this.channelDetails.hypeCommands)
+                    {
+                        var str = "";
+                        str += a.commandText;
+                        if (a.pointsCost > 0)
                         {
-                            this.logger.LogWarning("Invalid endtime (" + endtime + ")", true);
-                            return;
+                            var curString = (a.pointsCost == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural);
+                            str += " - Costs " + a.pointsCost + " " + curString + ". ";
                         }
+                        strs.Add(str);
+                    }
+                }
 
-                        var time = int.Parse(endtime);
-
-                        this.ceres.completeGuessingGame(time);
-                    }),
-                    Constants.AccessLevel.Moderator,
-                    true,
-                    false,
-                    "!endceres"
-                ));
-
-                this.commands.Add(new Command(
-                    Constants.CommandType.CancelCeres,
-                    new Action<ChatMessage, Command>((message, command) =>
-                    {
-                        this.ceres.cancelGuessing();
-                    }),
-                    Constants.AccessLevel.Moderator,
-                    true,
-                    false,
-                    "!cancelceres"
-                ));
-
-
-                this.commands.Add(new Command(
-                    Constants.CommandType.Guess,
-                    new Action<ChatMessage, Command>((message, command) =>
-                    {
-                        string guess = new string(message.Message.Where(Char.IsDigit).ToArray()); // linq magic to extract any leading/trailing chars
-
-                        if (guess.Length != 4)
-                        {
-                            lock (this.commands)
-                            { 
-                                sendMessage($"I'm not sure what guess you meant, @{message.Username} . Please enter a new guess with {(this.commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Guess).commandText)} xxxx");
-                            }
-                            return;
-                        }
-
-                        var time = int.Parse(guess);
-
-                        this.ceres.makeGuess(message.Username, time);
-                    }),
-                    Constants.AccessLevel.Public,
-                    true,
-                    false,
-                    "!guess"
-                ));
+                this._helpString = string.Join(" | ", strs.ToArray());
             }
-            else
+        }
+
+        public void ConfigureCeres(CeresConfiguration newSettings)
+        {
+            lock (this.commands)
             {
+                this.channelDetails.ceresConfiguration = newSettings;
+
+                // Complete reset:
                 this.commands.RemoveAll(x => x.commandType == Constants.CommandType.StartCeres ||
                     x.commandType == Constants.CommandType.StartCeres ||
                     x.commandType == Constants.CommandType.EndCeres ||
                     x.commandType == Constants.CommandType.CancelCeres ||
                     x.commandType == Constants.CommandType.Guess);
-                if (this.ceres != null)
+
+                if (this.channelDetails.ceresConfiguration != null && this.channelDetails.ceresConfiguration.ceresEnabled)
                 {
-                    this.ceres.shutdown();
-                }
-            }
-        }
-
-        public void ConfigureGamble(GambleConfiguration newSettings = null)
-        {
-            if (newSettings != null)
-            {
-                this.channelDetails.gambleConfiguration = newSettings;
-            }
-
-            if (this.channelDetails.gambleConfiguration != null && this.channelDetails.gambleConfiguration.gambleEnabled)
-            {
-                this.commands.Add(new Command(
-                    Constants.CommandType.Gamble,
-                    new Action<ChatMessage, Command>((message, command) =>
+                    // only use the one ceres object. If the user turns it off and then on again we want to keep this round going
+                    if (this.ceres == null)
                     {
-                        this.Gamble(message);
-                    }),
-                    Constants.AccessLevel.Public,
-                    false,
-                    false,
-                    "!gamble"
-                ));
-            }
-            else
-            {
-                this.commands.RemoveAll(x => x.commandType == Constants.CommandType.Gamble);
-            }
-        }
-
-        public void ConfigureHype(List<HypeCommand> newSettings = null)
-        {
-            if (newSettings != null)
-            {
-                this.channelDetails.hypeCommands = newSettings;
-            }
-
-            // Complete reset:
-
-            this.commands.RemoveAll(x => x.commandType == Constants.CommandType.Hype);
-
-            foreach (var cmd in this.channelDetails.hypeCommands)
-            {
-                if (!cmd.enabled) { continue; }
-
-                this.commands.Add(new Command(
-                    Constants.CommandType.Hype,
-                    new Action<ChatMessage, Command>((message, command) =>
-                    {
-                        var hCommand = this.channelDetails.hypeCommands.Find(x => x.commandText == command.commandText);
-
-                        if (hCommand.pointsCost != 0)
-                        {
-                            var curPoints = this.channelDetails.pointsManager.GetCurrentPlayerPoints(message.Username);
-                            if (curPoints < hCommand.pointsCost)
+                        this.ceres = new CeresGuessingGame(
+                            logger,
+                            channelDetails.channelName,
+                            newSettings.numberOfSecondsToGuess,
+                            () =>
                             {
-                                sendMessage($"You have only {curPoints} {(curPoints == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural)}, @{message.Username} . {hCommand.pointsCost} {(hCommand.pointsCost == 1 ? (this.channelDetails.pointsManager.CurrencySingular + " is") : (this.channelDetails.pointsManager.CurrencyPlural + " are"))} required for that command.");
+                                // On begin guessing
+                                lock (this.commands)
+                                {
+                                    this.sendMessage($"Ceres round started. Type {(this.commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Guess).commandText)} xxxx to register your Ceres time guess. You have {this.channelDetails.ceresConfiguration.numberOfSecondsToGuess} seconds to place your guess.");
+                                }
+                            },
+
+                            () =>
+                            {
+                                // On round canceled
+                                this.sendMessage("Ceres round cancelled.");
+                            },
+
+                            (endTime, guesses) =>
+                            {
+                                // On round finished
+
+                                var staticWinners = new List<Tuple<CeresGuess, int, string>>();
+                                foreach (var a in guesses)
+                                {
+                                    string closeness;
+                                    var points = this.channelDetails.ceresConfiguration.GetStaticPointsAwarded(endTime, a.guess, out closeness);
+                                    if (points != null && points > 0)
+                                    {
+                                        staticWinners.Add(new Tuple<CeresGuess, int, string>(a, points.Value, closeness));
+                                    }
+                                }
+
+                                var anyWinners = staticWinners.Any();
+                                var rankWinners = new List<Tuple<CeresGuess, int, string>>();
+                                if (this.channelDetails.ceresConfiguration.closestRewards.Any())
+                                {
+                                    foreach (var a in this.channelDetails.ceresConfiguration.closestRewards)
+                                    {
+                                        if (anyWinners && !a.awardEvenIfOtherWinners) { continue; }
+
+                                        var newWinners = guesses.Where(x => x.rank == a.rankAwarded).ToList();
+                                        foreach (var g in newWinners)
+                                        {
+                                            var str = g.rank.ToString();
+                                            switch (g.rank)
+                                            {
+                                                case 1:
+                                                    str += "st";
+                                                    break;
+                                                case 2:
+                                                    str += "nd";
+                                                    break;
+                                                case 3:
+                                                    str += "rd";
+                                                    break;
+                                                default:
+                                                    str += "th";
+                                                    break;
+                                            }
+
+
+                                            rankWinners.Add(new Tuple<CeresGuess, int, string>(g, a.pointsAwarded, str));
+                                        }
+                                    }
+                                }
+
+                                var anybodyWon = false;
+                                var messages = new List<string>();
+
+                                foreach (var a in this.channelDetails.ceresConfiguration.magicTimes)
+                                {
+                                    if (a.ceresTime == endTime)
+                                    {
+                                        var curString = (a.pointsAwarded == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural);
+
+                                        var timeStr = endTime.ToString().Insert(2, ".");
+
+                                        if (!guesses.Any())
+                                        {
+                                            messages.Add($"Nobody guessed. You all missed out on {a.pointsAwarded} {curString} from a Ceres time of {timeStr}! :(");
+                                            break;
+                                        }
+
+                                        if (guesses.Count > 4)
+                                        {
+                                            messages.Add($"Awarding {a.pointsAwarded} {curString} to {guesses.Count} beautiful people for a Ceres time of {timeStr}!");
+                                        }
+                                        else
+                                        {
+                                            messages.Add($"Awarding {a.pointsAwarded} {curString} to {(string.Join(", ", guesses.Select(x => x.userID).ToArray()))} for a Ceres time of {timeStr}!");
+                                        }
+
+                                        foreach (var g in guesses)
+                                        {
+                                            anybodyWon = true;
+                                            this.channelDetails.pointsManager.GivePlayerPoints(g.userID, a.pointsAwarded, out long? newPoints);
+                                        }
+
+                                        break;
+                                    }
+                                }
+
+                                foreach (var a in staticWinners)
+                                {
+                                    anybodyWon = true;
+
+                                    long? newPoints;
+
+                                    this.channelDetails.pointsManager.GivePlayerPoints(a.Item1.userID, a.Item2, out newPoints);
+
+                                    var curString = (a.Item2 == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural);
+
+                                    messages.Add(
+                                        $"{a.Item1.userID} guessed {a.Item3}, and wins {a.Item2} {curString}{(newPoints.HasValue ? ($" ({newPoints} total)") : "")}!"
+                                    );
+                                }
+
+                                foreach (var a in rankWinners)
+                                {
+                                    anybodyWon = true;
+
+                                    long? newPoints;
+
+                                    this.channelDetails.pointsManager.GivePlayerPoints(a.Item1.userID, a.Item2, out newPoints);
+
+                                    var curString = (a.Item2 == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural);
+
+                                    messages.Add(
+                                        $"{a.Item1.userID} came in {a.Item3}, and wins {a.Item2} {curString}{(newPoints.HasValue ? ($" ({newPoints} total)") : "")}!"
+                                    );
+                                }
+
+                                if (!anybodyWon)
+                                {
+                                    messages.Add("Ceres round ended. Nobody won. :(");
+                                }
+
+
+                                this.SendMessagesTogether(messages);
+                            },
+
+                            () =>
+                            {
+                            // On guessing time finished
+                            this.sendMessage($"Ceres time guessing has ended. Good luck!");
+                            });
+                    }
+
+                    this.commands.Add(new Command(
+                        Constants.CommandType.StartCeres,
+                        new Action<ChatMessage, Command>((message, command) =>
+                        {
+                            this.ceres.beginGuessing();
+                        }),
+                        Constants.AccessLevel.Moderator,
+                        false,
+                        true,
+                        "!startceres",
+                        false,
+                        5,
+                        null
+                    ));
+
+                    this.commands.Add(new Command(
+                        Constants.CommandType.EndCeres,
+                        new Action<ChatMessage, Command>((message, command) =>
+                        {
+                            string endtime = new string(message.Message.Where(Char.IsDigit).ToArray()); // linq magic to extract any leading/trailing chars
+
+                        if (endtime.Length != 4)
+                            {
+                                this.logger.LogWarning("Invalid endtime (" + endtime + ")", true);
                                 return;
                             }
-                        }
 
-                        var res = new List<string>();
+                            var time = int.Parse(endtime);
 
-                        var timesToRepeat = hCommand.numberOfResponses;
-                        var availableTextStrings = hCommand.commandResponses.Select(x => x).ToList(); // make a copy of the text strings
+                            this.ceres.completeGuessingGame(time);
+                        }),
+                        Constants.AccessLevel.Moderator,
+                        true,
+                        false,
+                        "!endceres",
+                        true, // does have a param
+                        5,
+                        null
+                    ));
 
-                        while (timesToRepeat > 0 && availableTextStrings.Any())
+                    this.commands.Add(new Command(
+                        Constants.CommandType.CancelCeres,
+                        new Action<ChatMessage, Command>((message, command) =>
                         {
-                            timesToRepeat--;
-                            var idx = 0;
-                            if (hCommand.randomizeResponseOrders)
+                            this.ceres.cancelGuessing();
+                        }),
+                        Constants.AccessLevel.Moderator,
+                        true,
+                        false,
+                        "!cancelceres",
+                        false,
+                        5,
+                        null
+                    ));
+
+
+                    this.commands.Add(new Command(
+                        Constants.CommandType.Guess,
+                        new Action<ChatMessage, Command>((message, command) =>
+                        {
+                            string guess = new string(message.Message.Where(Char.IsDigit).ToArray()); // linq magic to extract any leading/trailing chars
+
+                            if (guess.Length != 4)
                             {
-                                idx = rnd.Next(availableTextStrings.Count);
+                                lock (this.commands)
+                                {
+                                    sendMessage($"I'm not sure what guess you meant, @{message.Username} . Please enter a new guess with {(this.commands.FirstOrDefault(x => x.commandType == Constants.CommandType.Guess).commandText)} xxxx");
+                                }
+                                return;
                             }
 
-                            var text = availableTextStrings[idx];
-                            availableTextStrings.RemoveAt(idx);
-                            res.Add(text.message);
-                        }
+                            var time = int.Parse(guess);
 
-                        foreach (var a in res)
+                            this.ceres.makeGuess(message.Username, time);
+                        }),
+                        Constants.AccessLevel.Public,
+                        true,
+                        false,
+                        "!guess",
+                        true, // does have parameters
+                        null,
+                        null
+                    ));
+                }
+                else if (this.ceres != null)
+                {
+                    this.ceres.shutdown();
+                    this.ceres = null;
+                }
+
+                updateHelpString();
+            }
+        }
+
+        public void ConfigureGamble(GambleConfiguration newSettings)
+        {
+            lock (this.commands)
+            {
+                this.channelDetails.gambleConfiguration = newSettings;
+
+                // complete reset:
+                this.commands.RemoveAll(x => x.commandType == Constants.CommandType.Gamble);
+
+                if (this.channelDetails.gambleConfiguration != null && this.channelDetails.gambleConfiguration.gambleEnabled)
+                {
+                    this.commands.Add(new Command(
+                        Constants.CommandType.Gamble,
+                        new Action<ChatMessage, Command>((message, command) =>
                         {
-                            this.sendMessage(a);
-                        }
+                            this.Gamble(message);
+                        }),
+                        Constants.AccessLevel.Public,
+                        false,
+                        false,
+                        this.channelDetails.gambleConfiguration.gambleCommand,
+                        true, // has parameters
+                        null,
+                        3 // timeout is managed in the command, so use a really low one here to prevent spamming
+                    ));
+                }
+
+                updateHelpString();
+            }
+        }
+
+        public void ConfigureHype(List<HypeCommand> newSettings)
+        {
+            lock (this.commands)
+            {
+                if (newSettings == null) { newSettings = new List<HypeCommand>(); }
+
+                this.channelDetails.hypeCommands = newSettings;
+
+                // Complete reset:
+
+                this.commands.RemoveAll(x => x.commandType == Constants.CommandType.Hype);
+
+                foreach (var cmd in this.channelDetails.hypeCommands)
+                {
+                    if (!cmd.enabled) { continue; }
+
+                    this.commands.Add(new Command(
+                        Constants.CommandType.Hype,
+                        new Action<ChatMessage, Command>((message, command) =>
+                        {
+                            var hCommand = this.channelDetails.hypeCommands.Find(x => x.commandText == command.commandText);
+
+                            if (hCommand.pointsCost != 0)
+                            {
+                                var curPoints = this.channelDetails.pointsManager.GetCurrentPlayerPoints(message.Username);
+                                if (curPoints < hCommand.pointsCost)
+                                {
+                                    sendMessage($"You have only {curPoints} {(curPoints == 1 ? this.channelDetails.pointsManager.CurrencySingular : this.channelDetails.pointsManager.CurrencyPlural)}, @{message.Username} . {hCommand.pointsCost} {(hCommand.pointsCost == 1 ? (this.channelDetails.pointsManager.CurrencySingular + " is") : (this.channelDetails.pointsManager.CurrencyPlural + " are"))} required for that command.");
+                                    return;
+                                }
+                            }
+
+                            var res = new List<string>();
+
+                            var timesToRepeat = hCommand.numberOfResponses;
+                            var availableTextStrings = hCommand.commandResponses.Select(x => x).ToList(); // make a copy of the text strings
+
+                        while (timesToRepeat > 0 && availableTextStrings.Any())
+                            {
+                                timesToRepeat--;
+                                var idx = 0;
+                                if (hCommand.randomizeResponseOrders)
+                                {
+                                    idx = rnd.Next(availableTextStrings.Count);
+                                }
+
+                                var text = availableTextStrings[idx];
+                                availableTextStrings.RemoveAt(idx);
+                                res.Add(text.message);
+                            }
+
+                            foreach (var a in res)
+                            {
+                                this.sendMessage(a);
+                            }
 
                         // Deduct after, in case of exception
                         if (hCommand.pointsCost != 0)
-                        {
-                            long? newPoints;
-                            this.channelDetails.pointsManager.GivePlayerPoints(message.Username, (-1 * hCommand.pointsCost), out newPoints);
-                        }
-                    }),
-                    (Constants.AccessLevel)cmd.accessLevel,
-                    false,
-                    false,
-                    cmd.commandText));
+                            {
+                                long? newPoints;
+                                this.channelDetails.pointsManager.GivePlayerPoints(message.Username, (-1 * hCommand.pointsCost), out newPoints);
+                            }
+                        }),
+                        (Constants.AccessLevel)cmd.accessLevel,
+                        false,
+                        false,
+                        cmd.commandText,
+                        false,
+                        null,
+                        30));
+                }
+
+                updateHelpString();
             }
         }
 
@@ -288,12 +518,19 @@ namespace KomaruBot.ChatBot
 
                 foreach (var command in commands)
                 {
-                    if (command.commandText != null &&
-
-                        // TODO: should we use .Trim() to compare here? want to avoid commands clashing like cmd and cmd1
-                        messageText.StartsWith(command.commandText))
+                    if (command.hasParameters)
                     {
-                        return command;
+                        if (command.commandText != null && messageText.ToLower().StartsWith(command.commandText.ToLower()))
+                        {
+                            return command;
+                        }
+                    }
+                    else
+                    {
+                        if (command.commandText != null && messageText.ToLower().Trim() == command.commandText.ToLower().Trim())
+                        {
+                            return command;
+                        }
                     }
                 }
 
@@ -335,7 +572,9 @@ namespace KomaruBot.ChatBot
 
         public void disconnect()
         {
+            this.doNotReconnect = true;
             this.ceres?.shutdown();
+            this.ceres = null;
             this.twitchClient.Disconnect();
             this.twitchClient = null;
         }
@@ -452,6 +691,48 @@ namespace KomaruBot.ChatBot
                     return;
                 }
 
+                if (command.globalTimeout.HasValue)
+                {
+                    var key = command.commandText + "_" + command.commandType.ToString();
+
+                    lock (globalTimeouts)
+                    {
+                        DateTime allowedAgain;
+                        if (globalTimeouts.TryGetValue(key, out allowedAgain))
+                        {
+                            if (DateTime.Now < allowedAgain)
+                            {
+                                // We can't use this command yet because the currenttime is less than the allowed time
+                                return;
+                            }
+
+                            globalTimeouts.Remove(key);
+                        }
+                        globalTimeouts.Add(key, DateTime.Now.AddSeconds(command.globalTimeout.Value));
+                    }
+                }
+
+                if (command.userTimeout.HasValue)
+                {
+                    var key = command.commandText + "_" + command.commandType.ToString() + "_" + e.ChatMessage.Username;
+
+                    lock (userTimeouts)
+                    {
+                        DateTime allowedAgain;
+                        if (userTimeouts.TryGetValue(key, out allowedAgain))
+                        {
+                            if (DateTime.Now < allowedAgain)
+                            {
+                                // We can't use this command yet because the currenttime is less than the allowed time
+                                return;
+                            }
+
+                            userTimeouts.Remove(key);
+                        }
+                        userTimeouts.Add(key, DateTime.Now.AddSeconds(command.userTimeout.Value));
+                    }
+                }
+
                 command.onRun(e.ChatMessage, command);
             }
             catch (Exception exc)
@@ -459,6 +740,47 @@ namespace KomaruBot.ChatBot
                 this.logger.LogError(ExceptionFormatter.FormatException(exc, $"Exception in {this.GetType().Name} - {System.Reflection.MethodBase.GetCurrentMethod().Name}"));
             }
         }
+
+        private Dictionary<string, DateTime> globalTimeouts = new Dictionary<string, DateTime>();
+        private Dictionary<string, DateTime> userTimeouts = new Dictionary<string, DateTime>();
+
+        public void cleanupTimeouts()
+        {
+            lock (globalTimeouts)
+            {
+                var toRemove = new List<string>();
+                foreach (var a in globalTimeouts)
+                {
+                    if (a.Value < DateTime.Now)
+                    {
+                        toRemove.Add(a.Key);
+                    }
+                }
+
+                foreach (var a in toRemove)
+                {
+                    globalTimeouts.Remove(a);
+                }
+            }
+
+            lock (userTimeouts)
+            {
+                var toRemove = new List<string>();
+                foreach (var a in userTimeouts)
+                {
+                    if (a.Value < DateTime.Now)
+                    {
+                        toRemove.Add(a.Key);
+                    }
+                }
+
+                foreach (var a in toRemove)
+                {
+                    userTimeouts.Remove(a);
+                }
+            }
+        }
+
 
         private static object sendLock = new object();
         public void sendMessage(string message)
@@ -505,7 +827,17 @@ namespace KomaruBot.ChatBot
                 DateTime lastGamble;
                 if (userLastGambles.TryGetValue(c.Username, out lastGamble))
                 {
-                    var lastGambleMustBeBeforeThisDate = DateTime.Now.AddMinutes(this.channelDetails.gambleConfiguration.minMinutesBetweenGambles * -1);
+                    DateTime lastGambleMustBeBeforeThisDate;
+                    if (this.channelDetails.gambleConfiguration.minMinutesBetweenGambles == 0)
+                    {
+                        lastGambleMustBeBeforeThisDate = DateTime.Now.AddSeconds(-30);
+                    }
+                    else
+                    {
+                        lastGambleMustBeBeforeThisDate = DateTime.Now.AddMinutes(this.channelDetails.gambleConfiguration.minMinutesBetweenGambles * -1);
+                    }
+
+
                     if (lastGamble > lastGambleMustBeBeforeThisDate)
                     {
                         var timespan = (lastGamble - lastGambleMustBeBeforeThisDate);
@@ -519,7 +851,12 @@ namespace KomaruBot.ChatBot
                             if (timespan.Seconds == 1) { timeString = timespan.Seconds + " second"; }
                         }
 
-                        sendMessage($"@{c.Username}, you can only gamble once every {this.channelDetails.gambleConfiguration.minMinutesBetweenGambles} {(this.channelDetails.gambleConfiguration.minMinutesBetweenGambles == 1 ? "minute" : "minutes")}. Please wait another {timeString}.");
+                        var timeoutStr = $"{this.channelDetails.gambleConfiguration.minMinutesBetweenGambles} {(this.channelDetails.gambleConfiguration.minMinutesBetweenGambles == 1 ? "minute" : "minutes")}";
+                        if (this.channelDetails.gambleConfiguration.minMinutesBetweenGambles == 0)
+                        {
+                            timeoutStr = "30 seconds";
+                        }
+                        sendMessage($"@{c.Username}, you can only gamble once every {timeoutStr}. Please wait another {timeString}.");
                         return;
                     }
                 }

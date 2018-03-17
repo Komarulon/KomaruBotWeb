@@ -40,7 +40,12 @@ namespace KomaruBot.WebAPI.Helpers
                     currencySingular = "Coin",
                     streamElementsAccountID = null,
                     streamElementsJWTToken = null,
-                    botEnabled = false,
+                    basicBotConfiguration = new Common.Models.BasicBotConfiguration
+                    {
+                        botEnabled = false,
+                        queryPointsCommand = "!coins",
+                        helpCommand = "!komahelp",
+                    }
                 };
                 this.redis.Set(key, botSettings);
             }
@@ -126,6 +131,7 @@ namespace KomaruBot.WebAPI.Helpers
                         minBid = 10,
                         maxBid = 1000,
                         minMinutesBetweenGambles = 15,
+                        gambleCommand = "!gamble",
                         rollResults = new List<Common.Models.GambleRewards>
                         {
                             new Common.Models.GambleRewards { roll = 100, multiplier = 5m },
@@ -258,6 +264,32 @@ namespace KomaruBot.WebAPI.Helpers
                     ceresConfiguration = new Common.Models.CeresConfiguration
                     {
                         ceresEnabled = false,
+                        numberOfSecondsToGuess = 45,
+                        staticRewards = new List<Common.Models.CeresConfiguration.StaticReward>
+                        {
+                            new Common.Models.CeresConfiguration.StaticReward(0, 0, 1000),
+                            new Common.Models.CeresConfiguration.StaticReward(1, 2, 500),
+                            new Common.Models.CeresConfiguration.StaticReward(3, 4, 100),
+                        },
+                        closestRewards = new List<Common.Models.CeresConfiguration.ClosestReward>
+                        {
+                            new Common.Models.CeresConfiguration.ClosestReward(1, 100, false),
+                            new Common.Models.CeresConfiguration.ClosestReward(2, 50, false),
+                            new Common.Models.CeresConfiguration.ClosestReward(3, 10, false),
+                        },
+                        magicTimes = new List<Common.Models.CeresConfiguration.MagicTime>
+                        {
+                            new Common.Models.CeresConfiguration.MagicTime
+                            {
+                                ceresTime = 4700,
+                                pointsAwarded = 10000,
+                            },
+                            new Common.Models.CeresConfiguration.MagicTime
+                            {
+                                ceresTime = 4600,
+                                pointsAwarded = 1000,
+                            },
+                        }
                     },
                     userID = userID,
                 };
@@ -301,7 +333,7 @@ namespace KomaruBot.WebAPI.Helpers
                 return null;
             }
 
-            if (!botSettings.botEnabled)
+            if (!botSettings.basicBotConfiguration.botEnabled)
             {
                 return null;
             }
@@ -319,6 +351,7 @@ namespace KomaruBot.WebAPI.Helpers
                 gambleConfiguration = gambleSettings.gambleConfiguration,
                 pointsManager = pointsManager,
                 ceresConfiguration = ceresSettings.ceresConfiguration,
+                basicConfiguration = botSettings.basicBotConfiguration,
             };
 
             return config;
@@ -340,6 +373,32 @@ namespace KomaruBot.WebAPI.Helpers
                     }
                 }
                 
+            }
+
+            return res;
+        }
+
+        public class _user
+        {
+            public string userID { get; set; }
+            public bool botEnabled { get; set; }
+        }
+        public List<_user> GetAllUserIDs()
+        {
+            var allKeys = this.redis.GetKeysByPattern_SLOW(UserBotSettings.GetWildcardKey());
+            var res = new List<_user>();
+            foreach (var k in allKeys)
+            {
+                var botSettings = this.redis.Get<UserBotSettings>(k);
+                if (botSettings != null)
+                {
+                    res.Add(new _user
+                    {
+                        botEnabled = botSettings?.basicBotConfiguration?.botEnabled ?? false,
+                        userID = botSettings.userID,
+                    });
+                }
+
             }
 
             return res;

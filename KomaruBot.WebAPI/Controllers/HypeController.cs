@@ -69,6 +69,12 @@ namespace KomaruBot.WebAPI.Controllers
                 if (this.appSettings.TwitchClientID != userInfo.GetClientID()) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"{nameof(this.appSettings.TwitchClientID)} does not match"); }
                 if (settings.userID != userInfo.GetUserID()) { return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, $"{nameof(settings.userID)} is not yours"); }
 
+                var validationResult = settings.validate();
+                if (validationResult != System.ComponentModel.DataAnnotations.ValidationResult.Success)
+                {
+                    return StatusCode((int)System.Net.HttpStatusCode.BadRequest, new { message = validationResult.ErrorMessage });
+                }
+
                 this.userHelper.SaveSettings(settings);
                 Startup.chatBotManager.UpdateConnection(userInfo.GetUserID(), settings.hypeCommands);
 

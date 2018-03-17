@@ -28,7 +28,7 @@
         <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
     <div ng-controller="navBarController" ng-cloak>
-        <div>
+        <div ng-show="isLoggedIn">
             <md-content class="md-padding">
                 <md-nav-bar md-selected-nav-item="currentNavItem">
                     <md-nav-item md-nav-click="goto('main')" ng-show="isLoggedIn" name="main">
@@ -43,20 +43,23 @@
                     <md-nav-item md-nav-click="goto('gamble')" ng-show="isLoggedIn" name="gamble">
                         Gamble Settings
                     </md-nav-item>
-                    <md-nav-item md-nav-click="goto('preauth')" ng-hide="isLoggedIn" name="preauth">
-                        Log In
+                    <md-nav-item md-nav-click="goto('importexport')" ng-show="isLoggedIn" name="importexport">
+                        Import/Export
                     </md-nav-item>
-                    <md-nav-item md-nav-click="logOut" ng-show="isLoggedIn">
+                    <md-nav-item md-nav-click="goto('about')" ng-show="isLoggedIn" name="about">
+                        About
+                    </md-nav-item>
+                    <md-nav-item md-nav-click="logOut()" ng-show="isLoggedIn">
                         Log Out
                     </md-nav-item>
                 </md-nav-bar>
             </md-content>
         </div>
-        <div>
-            <div ng-view style="float: left; margin-left: 10px;">
+        <div style="display: flex;">
 
-            </div>
-            <div style="float: right; margin-right: 10px; padding: 0px;" ng-show="isLoggedIn" class="panel panel-primary">
+            <div ng-view style="float: left; margin-left: 10px; margin-right: 10px; flex: 1;"></div>
+
+            <div style="float: right; margin-right: 10px; padding: 0px; height: 741px;" ng-show="isLoggedIn" class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         {{username}}'s Chat
@@ -72,6 +75,10 @@
                 </div>
             </div>
             <br style="clear: both; " />
+        </div>
+        <div ng-hide="isLoggedIn" style="margin-left: 10px; margin-right: 10px;">
+            <div ng-controller="AboutController" ng-include="'/views/about.html'" ng-cloak>
+            </div>
         </div>
     </div>
 
@@ -94,5 +101,7 @@
     <script src="/views/ceres.js"></script>
     <script src="/views/gamble.js"></script>
     <script src="/views/hype.js"></script>
+    <script src="/views/about.js"></script>
+    <script src="/views/importexport.js"></script>
 </body>
 </html>

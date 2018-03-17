@@ -137,6 +137,10 @@ angular.module('KomaruBot')
         });
     };
 
+    $scope.removeHypeCommand = function (hypeCommandList, idx) {
+        hypeCommandList.splice(idx, 1);
+    };
+
     $scope.accessLevels = [
         { 'id': 0, 'label': "Public" },
         { 'id': 1, 'label': "Moderator and Broadcaster only" },

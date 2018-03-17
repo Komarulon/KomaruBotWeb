@@ -1,9 +1,11 @@
-﻿<p>
-    <div ng-hide="isLoggedIn">
-        <a ng-show="twitchAuthLink != null" ng-href="{{twitchAuthLink}}" class="btn btn-link">Click here to log in.</a>
-        <span ng-hide="twitchAuthLink != null">Loading link...</span>
-    </div>
-    <div ng-show="isLoggedIn">
-        <div>You are logged in. Redirecting...</div>
-    </div>
-</p>
+﻿<div class="page-header">
+    <h1>Welcome to KomaruBot!</h1>
+</div>
+
+<div ng-hide="isLoggedIn">
+    <p><a class="btn btn-primary btn-lg" ng-show="twitchAuthLink != null" ng-href="{{twitchAuthLink}}" role="button">Log In With Twitch</a></p>
+    <span ng-hide="twitchAuthLink != null">Loading link...</span>
+</div>
+<div ng-show="isLoggedIn">
+    <div>You are logged in. Redirecting...</div>
+</div>

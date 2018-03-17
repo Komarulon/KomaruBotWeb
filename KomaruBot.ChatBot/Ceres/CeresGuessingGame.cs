@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using KomaruBot.Common;
+using KomaruBot.Common.Extensions;
 
 namespace KomaruBot.ChatBot.Ceres
 {
@@ -11,9 +13,10 @@ namespace KomaruBot.ChatBot.Ceres
         public CeresGuessingGame(
             ILogger logger,
             string channelName,
+            int numberOfSecondsToGuess,
             Action onGameStarted,
             Action onGameCanceled,
-            Action onGameCompleted,
+            Action<int, List<CeresGuess>> onGameCompleted,
             Action onGuessingTimeFinished
             )
         {
@@ -22,6 +25,7 @@ namespace KomaruBot.ChatBot.Ceres
             this.guesses = new List<CeresGuess>();
             this.logger = logger;
             this.channelName = channelName;
+            this.secondsToGuess = numberOfSecondsToGuess;
 
             this.onGameStarted = onGameStarted;
             this.onGameCanceled = onGameCanceled;
@@ -38,7 +42,7 @@ namespace KomaruBot.ChatBot.Ceres
         // So there's the time allowed to guess. 
         // After this time, there's a hidden range we'll allow more times to guess
         // and still accept them
-        public static int secondsToGuess = 45;
+        public int secondsToGuess { get; private set; }
 
         // This is the "extra" time where guesses are allowed but it is not shown as such
         public static int secondsToGuessSecretExtra = 5;
@@ -46,17 +50,20 @@ namespace KomaruBot.ChatBot.Ceres
         private Action onGameStarted;
         public void beginGuessing()
         {
-            if (!this.RoundRunning)
+            lock (this)
             {
-                logger.LogInformation($"{channelName} | Ceres round started.");
-                this.RoundRunning = true;
-                this.GuessesAllowed = true;
-                this.setRoundEndTimer();
-                lock (this) { this.guesses = new List<CeresGuess>(); }
-
-                if (onGameStarted != null)
+                if (!this.RoundRunning)
                 {
-                    onGameStarted();
+                    logger.LogInformation($"{channelName} | Ceres round started.");
+                    this.RoundRunning = true;
+                    this.GuessesAllowed = true;
+                    this.setRoundEndTimer();
+                    this.guesses = new List<CeresGuess>();
+
+                    if (onGameStarted != null)
+                    {
+                        onGameStarted();
+                    }
                 }
             }
         }
@@ -64,17 +71,20 @@ namespace KomaruBot.ChatBot.Ceres
         private Action onGameCanceled;
         public void cancelGuessing()
         {
-            if (this.RoundRunning)
+            lock (this)
             {
-                logger.LogInformation($"{channelName} | Ceres round canceled.");
-                this.RoundRunning = false;
-                this.GuessesAllowed = false;
-                this.cancelRoundEndTimer();
-                this.cancelRoundRealEndTimer();
-
-                if (this.onGameCanceled != null)
+                if (this.RoundRunning)
                 {
-                    onGameCanceled();
+                    logger.LogInformation($"{channelName} | Ceres round canceled.");
+                    this.RoundRunning = false;
+                    this.GuessesAllowed = false;
+                    this.cancelRoundEndTimer();
+                    this.cancelRoundRealEndTimer();
+
+                    if (this.onGameCanceled != null)
+                    {
+                        onGameCanceled();
+                    }
                 }
             }
         }
@@ -104,13 +114,16 @@ namespace KomaruBot.ChatBot.Ceres
 
         public void shutdown()
         {
-            this.RoundRunning = false;
-            this.GuessesAllowed = false;
-            this.cancelRoundEndTimer();
-            this.cancelRoundRealEndTimer();
+            lock (this)
+            {
+                this.RoundRunning = false;
+                this.GuessesAllowed = false;
+                this.cancelRoundEndTimer();
+                this.cancelRoundRealEndTimer();
+            }
         }
 
-        private Action onGameCompleted;
+        private Action<int, List<CeresGuess>> onGameCompleted;
 
         /// <summary>
         /// endTime should be something like 4600
@@ -118,26 +131,30 @@ namespace KomaruBot.ChatBot.Ceres
         /// <param name="endTime"></param>
         public void completeGuessingGame(int endTime)
         {
-            logger.LogInformation($"{channelName} | Ceres round ended with time {endTime}");
-
-            if (this.RoundRunning)
+            lock (this)
             {
-                this.RoundRunning = false;
-                this.GuessesAllowed = false;
-                this.cancelRoundEndTimer();
-                this.cancelRoundRealEndTimer();
+                logger.LogInformation($"{channelName} | Ceres round ended with time {endTime}");
 
-                lock (this)
+                if (this.RoundRunning)
                 {
-                    foreach (var a in this.guesses)
+                    this.RoundRunning = false;
+                    this.GuessesAllowed = false;
+                    this.cancelRoundEndTimer();
+                    this.cancelRoundRealEndTimer();
+
+                    if (onGameCompleted != null)
                     {
-                        //award stuff build up string etc
-                    }
-                }
+                        guesses.Rank((guess) =>
+                        {
+                            return Math.Abs(endTime - guess.guess);
+                        },
+                        (guess, rank, idx) =>
+                        {
+                            guess.rank = rank;
+                        });
 
-                if (onGameCompleted != null)
-                {
-                    onGameCompleted();
+                        onGameCompleted(endTime, this.guesses);
+                    }
                 }
             }
         }

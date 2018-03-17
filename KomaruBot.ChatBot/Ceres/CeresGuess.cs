@@ -8,5 +8,6 @@ namespace KomaruBot.ChatBot.Ceres
     {
         public string userID { get; set; }
         public int guess { get; set; }
+        public int rank { get; set; }
     }
 }

@@ -13,10 +13,7 @@ namespace KomaruBot.Common
             CancelCeres,
             StartCeres,
             GetPoints,
-            Leaderboard,
-            Stats,
             Help,
-            About,
             Gamble,
             Hype
         }

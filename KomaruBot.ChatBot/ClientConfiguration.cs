@@ -12,6 +12,7 @@ namespace KomaruBot.ChatBot
         public List<HypeCommand> hypeCommands { get; set; }
         public GambleConfiguration gambleConfiguration { get; set; }
         public CeresConfiguration ceresConfiguration { get; set; }
+        public BasicBotConfiguration basicConfiguration { get; set; }
         public IPointsManager pointsManager { get; set; }
     }
 }

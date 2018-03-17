@@ -46,6 +46,8 @@ namespace KomaruBot.WebAPI.Helpers
 
                         var content = client.SendAsync(request).Result;
                         string responseBody = content.Content.ReadAsStringAsync().Result;
+
+                        Startup.chatBotManager.PeriodicCleanup();
                     }
                     catch (Exception exc)
                     {

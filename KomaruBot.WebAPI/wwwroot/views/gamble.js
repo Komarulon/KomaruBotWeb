@@ -12,11 +12,7 @@ angular.module('KomaruBot')
     if (!$scope.isLoggedIn || (window.sessionStorage["username"] == null)) { $location.path('/preauth'); setTimeout(function () { location.reload(); }, 0); }
 
     $scope.userID = window.sessionStorage["username"];
-    $scope.gambleEnabled = false;
-    $scope.minBid = 1;
-    $scope.maxBid = 1;
-    $scope.minMinutesBetweenGambles = 0;
-    $scope.rollResults = [];
+    $scope.gambleConfiguration = null;
 
     $scope.loaded = false;
     $scope.loadingMessage = "Loading...";
@@ -32,11 +28,7 @@ angular.module('KomaruBot')
         loadingIcon: null,
         error: null,
         success: function (json) {
-            $scope.gambleEnabled = json.gambleConfiguration.gambleEnabled;
-            $scope.minBid = json.gambleConfiguration.minBid;
-            $scope.maxBid = json.gambleConfiguration.maxBid;
-            $scope.minMinutesBetweenGambles = json.gambleConfiguration.minMinutesBetweenGambles;
-            $scope.rollResults = json.gambleConfiguration.rollResults;
+            $scope.gambleConfiguration = json.gambleConfiguration;
 
             $scope.loaded = true;
             $scope.loadingMessage = null;
@@ -61,13 +53,7 @@ angular.module('KomaruBot')
     $scope.saveSettings = function () {
         var model = {
             userID: $scope.userID,
-            gambleConfiguration: {
-                gambleEnabled: $scope.gambleEnabled,
-                minBid: $scope.minBid,
-                maxBid: $scope.maxBid,
-                minMinutesBetweenGambles: $scope.minMinutesBetweenGambles,
-                rollResults: $scope.rollResults,
-            }
+            gambleConfiguration: $scope.gambleConfiguration
         };
 
         $scope.loadingMessage = "Saving Gamble settings...";
@@ -110,4 +96,31 @@ angular.module('KomaruBot')
         });
     };
 
+    $scope.getAmountAwardedForRoll = function (multiplier, amount) {
+        if (multiplier == 1) {
+            return amount;
+        }
+
+        if (multiplier < 1) {
+            var amountLost = parseInt(((1 - multiplier) * amount), 10);
+            return amountLost * -1;
+        } else {
+            var amountGained = parseInt((multiplier * amount), 10);
+            return amountGained;
+        }
+    };
+
+    $scope.getTotalAmountOfMoneyWon = function (gambleConfig) {
+        if (gambleConfig == null) {
+            return 0;
+        }
+
+        var totalWon = 0;
+        for (var i = 0; i < gambleConfig.rollResults.length; i++) {
+            var rollResult = gambleConfig.rollResults[i];
+            totalWon += $scope.getAmountAwardedForRoll(rollResult.multiplier, 100);
+        }
+
+        return totalWon
+    }
 }]);
