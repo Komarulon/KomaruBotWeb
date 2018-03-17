@@ -25,6 +25,7 @@ namespace KomaruBot.ChatBot
 
         private CeresGuessingGame ceres;
 
+        private static int gambleTimeoutSecondsDefault = 30;
         private static int numberOfMessagesAllowed = 16;
         private static int secondsThrottled = 15;
         private static Random rnd = new Random();
@@ -91,6 +92,7 @@ namespace KomaruBot.ChatBot
             }
         }
 
+        
         private object _helpLock = new object();
         private string _helpString;
         private void updateHelpString()
@@ -118,7 +120,20 @@ namespace KomaruBot.ChatBot
                     cmd = this.commands.Find(x => x.commandType == Constants.CommandType.Gamble);
                     if (cmd != null)
                     {
-                        strs.Add($"\"{cmd.commandText} [points]\" - gamble between {this.channelDetails.gambleConfiguration.minBid} and {this.channelDetails.gambleConfiguration.maxBid} {this.channelDetails.pointsManager.CurrencyPlural}. {this.channelDetails.gambleConfiguration.minMinutesBetweenGambles} timeout.");
+                        var str = $"\"{cmd.commandText} [points]\" - gamble between {this.channelDetails.gambleConfiguration.minBid} " +
+                                  "and {this.channelDetails.gambleConfiguration.maxBid} {this.channelDetails.pointsManager.CurrencyPlural}. ";
+
+                        if (this.channelDetails.gambleConfiguration.minMinutesBetweenGambles == 0)
+                        {
+                            str += $"{gambleTimeoutSecondsDefault} sec timeout.";
+                        }
+                        else
+                        {
+                            str += $"{this.channelDetails.gambleConfiguration.minMinutesBetweenGambles} min timeout.";
+                        }
+                            
+
+                        strs.Add(str);
                     }
                 }
 
@@ -830,7 +845,7 @@ namespace KomaruBot.ChatBot
                     DateTime lastGambleMustBeBeforeThisDate;
                     if (this.channelDetails.gambleConfiguration.minMinutesBetweenGambles == 0)
                     {
-                        lastGambleMustBeBeforeThisDate = DateTime.Now.AddSeconds(-30);
+                        lastGambleMustBeBeforeThisDate = DateTime.Now.AddSeconds(-1 * gambleTimeoutSecondsDefault);
                     }
                     else
                     {
@@ -854,7 +869,7 @@ namespace KomaruBot.ChatBot
                         var timeoutStr = $"{this.channelDetails.gambleConfiguration.minMinutesBetweenGambles} {(this.channelDetails.gambleConfiguration.minMinutesBetweenGambles == 1 ? "minute" : "minutes")}";
                         if (this.channelDetails.gambleConfiguration.minMinutesBetweenGambles == 0)
                         {
-                            timeoutStr = "30 seconds";
+                            timeoutStr = $"{gambleTimeoutSecondsDefault} seconds";
                         }
                         sendMessage($"@{c.Username}, you can only gamble once every {timeoutStr}. Please wait another {timeString}.");
                         return;
