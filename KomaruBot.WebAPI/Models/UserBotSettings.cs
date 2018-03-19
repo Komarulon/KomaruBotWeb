@@ -11,17 +11,17 @@ namespace KomaruBot.WebAPI.Models
     {
         public static string GetKey(string userID)
         {
-            return $"bot_{userID}";
+            return $"bot_{userID}".ToLower();
         }
 
         public string GetKey()
         {
-            return $"bot_{this.userID}";
+            return $"bot_{this.userID}".ToLower();
         }
 
         public static string GetWildcardKey()
         {
-            return $"bot_*";
+            return $"bot_*".ToLower();
         }
 
         public string streamElementsJWTToken { get; set; }
@@ -31,6 +31,8 @@ namespace KomaruBot.WebAPI.Models
         public string currencySingular { get; set; }
 
         public string currencyPlural { get; set; }
+
+        public string linkedBotAccount { get; set; }
 
         public BasicBotConfiguration basicBotConfiguration { get; set; }
 

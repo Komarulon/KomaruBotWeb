@@ -11,7 +11,7 @@
     <div ng-show="loaded">
         <div class="panel panel-default" style=" margin-top: 10px;">
             <div class="panel-heading">
-                <h3 class="panel-title">Account Settings</h3>
+                <h3 class="panel-title">Basic Settings</h3>
             </div>
             <div class="panel-body" style="display: flex;">
                 <div style="float: left; flex: 1">
@@ -20,10 +20,6 @@
                         <label class="form-check-label" for="id_botEnabled">
                             KomaruBot Enabled
                         </label>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_channel">Bot Channel</label>
-                        <input style="width: 200px;" type="text" class="form-control" readonly id="id_channel" ng-model="userID">
                     </div>
                     <div class="form-group">
                         <label for="id_currencySingular">Currency Singular</label>
@@ -90,7 +86,77 @@
                         </div>
                     </div>
                 </div>
-                 <br style="clear: both;" />
+                <br style="clear: both;" />
+            </div>
+        </div>
+        <div class="panel panel-default" style=" margin-top: 10px;">
+            <div class="panel-heading">
+                <h3 class="panel-title">Account Settings</h3>
+            </div>
+            <div class="panel-body" style="display: flex;">
+                <div style="float: left; flex: 1">
+                    <div class="panel panel-info" style="margin-top: 10px; margin-right: 10px;" ng-show="botAccountRequestUsername != null">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Bot Request</h3>
+                        </div>
+                        <div class="panel-body">
+                            Twitch user {{botAccountRequestUsername}} has requested to use your Twitch account ({{userID}}) as a bot.
+                            <br />
+                            <button ng-click="acceptBotLink()" type="button" class="btn btn-success">Accept Link</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_channel">Bot Channel</label>
+                        <input style="width: 200px;" type="text" class="form-control" readonly id="id_channel" ng-model="userID">
+                    </div>
+                    <div class="form-group">
+                        <label for="id_channel">Bot Account</label>
+                        <br />
+                        <input style="width: 200px; display: inline-block;" type="text" class="form-control" readonly id="id_channel" ng-model="botAccount">
+                        <button ng-show="botAccount != 'KomaruBot'" ng-click="removeBotLink()" type="button" class="btn btn-danger">Unlink</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_channel">New Bot Account</label>
+                        <br />
+                        <input style="width: 200px; display: inline-block;" type="text" class="form-control" id="id_channel" ng-model="newBotAccount">
+                        <button ng-click="beginBotLink()" type="button" class="btn btn-success">Begin Link</button>
+                    </div>
+                </div>
+                <div style="float: left; flex: 1">
+                    <div class="panel panel-info" style="margin-top: 10px;">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Bot Account Settings</h3>
+                        </div>
+                        <div class="panel-body">
+                            You can configure KomaruBot to use a different Twitch Username than "KomaruBot". 
+                            <br />
+                            <ol>
+                                <li>
+                                    Make your Bot Account on Twitch. Make sure you can log in to it.
+                                </li>
+                                <li>
+                                    Using your PRIMARY (Streaming) account, log in here.
+                                </li>
+                                <li>
+                                    In the "New Bot Account" field, enter your Bot Account's username, then click "Begin Link""
+                                </li>
+                                <li>
+                                    In a private browsing (icognito) window, log in to KomaruBot using your BOT ACCOUNT. This will require you to log in to Twitch under that account.
+                                    You can also simply log out of twitch and log in to your bot account in this window.
+                                </li>
+                                <li>
+                                    In the panel titled "Bot Request", make sure the requesting account is your account. Then, click "Accept Link". 
+                                    KomaruBot will then use your account instead of the default bot account. 
+                                </li>
+                            </ol>
+
+                            <br />
+                            It is recommended that you make KomaruBot, or the bot you use, a mod of your channel. 
+                        </div>
+                    </div>
+                </div>
+                <br style="clear: both;" />
             </div>
         </div>
     </div>

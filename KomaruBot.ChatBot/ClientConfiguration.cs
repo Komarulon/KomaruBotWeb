@@ -13,6 +13,7 @@ namespace KomaruBot.ChatBot
         public GambleConfiguration gambleConfiguration { get; set; }
         public CeresConfiguration ceresConfiguration { get; set; }
         public BasicBotConfiguration basicConfiguration { get; set; }
+        public BotAccountConfiguration botAccountConfiguration { get; set; }
         public IPointsManager pointsManager { get; set; }
     }
 }

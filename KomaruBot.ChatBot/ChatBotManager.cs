@@ -70,7 +70,23 @@ namespace KomaruBot.ChatBot
                 ChatBotConnection bot;
                 if (!chatBots.TryGetValue(channel.channelName, out bot))
                 {
-                    bot = new ChatBotConnection(this.logger, this.ChatBotTwitchUsername, this.ChatBotTwitchOauthToken, channel);
+                    if (channel != null && channel.botAccountConfiguration != null && !string.IsNullOrEmpty(channel.botAccountConfiguration.username))
+                    {
+                        bot = new ChatBotConnection(
+                            this.logger,
+                            channel.botAccountConfiguration.username,
+                            channel.botAccountConfiguration.accessToken,
+                            channel);
+                    }
+                    else
+                    {
+                        bot = new ChatBotConnection(
+                            this.logger,
+                            this.ChatBotTwitchUsername,
+                            this.ChatBotTwitchOauthToken,
+                            channel);
+                    }
+
                     chatBots.Add(channel.channelName, bot);
                     this.logger.LogInformation("Started chatbot for " + channel.channelName);
                     return true;

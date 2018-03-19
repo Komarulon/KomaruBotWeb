@@ -10,5 +10,7 @@ namespace KomaruBot.WebAPI.Authentication
     {
         Models.AuthenticationResult Authenticate(string authorizationHeader);
         Models.AuthenticationResult Authenticate(HttpContext context);
+        Models.AuthenticationResult Authenticate(string authorizationHeader, out string token);
+        Models.AuthenticationResult Authenticate(HttpContext context, out string token);
     }
 }

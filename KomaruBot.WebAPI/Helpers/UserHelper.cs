@@ -1,4 +1,5 @@
 ﻿using KomaruBot.Common.Interfaces;
+using KomaruBot.Common.Models;
 using KomaruBot.Common.PointsManagers;
 using KomaruBot.DAL;
 using KomaruBot.WebAPI.Models;
@@ -349,6 +350,8 @@ namespace KomaruBot.WebAPI.Helpers
 
             var pointsManager = this.GetPointsManager(botSettings);
 
+            var botAcct = this.GetBotAccount(false, botSettings.userID);
+
             var config = new ChatBot.ClientConfiguration
             {
                 channelName = botSettings.userID,
@@ -357,6 +360,7 @@ namespace KomaruBot.WebAPI.Helpers
                 pointsManager = pointsManager,
                 ceresConfiguration = ceresSettings.ceresConfiguration,
                 basicConfiguration = botSettings.basicBotConfiguration,
+                botAccountConfiguration = botAcct,
             };
 
             return config;
@@ -377,7 +381,7 @@ namespace KomaruBot.WebAPI.Helpers
                         res.Add(config);
                     }
                 }
-                
+
             }
 
             return res;
@@ -407,6 +411,49 @@ namespace KomaruBot.WebAPI.Helpers
             }
 
             return res;
+        }
+
+        public void SendBotRequest(AlternativeUserBotRequest alternativeUserBotRequest)
+        {
+            var key = alternativeUserBotRequest.GetKey();
+            this.redis.Set(key, alternativeUserBotRequest);
+        }
+
+        public AlternativeUserBotRequest GetBotRequest(string myUserID)
+        {
+            var key = AlternativeUserBotRequest.GetKey(myUserID);
+            var request = this.redis.Get<AlternativeUserBotRequest>(key);
+            return request;
+        }
+
+        public void AcceptBotRequest(AlternativeUserBotRequest toAccept, string accessToken)
+        {
+            var toSave = new BotAccountConfiguration
+            {
+                botIsForAccount = toAccept.requestingUserID,
+                username = toAccept.requestedBotUsername,
+                accessToken = accessToken
+            };
+            this.redis.Set(toSave.GetKey(), toSave);
+            this.redis.Delete(AlternativeUserBotRequest.GetKey(toAccept.requestedBotUsername));
+        }
+
+        public BotAccountConfiguration GetBotAccount(bool stripAccessToken, string userID)
+        {
+            var key = BotAccountConfiguration.GetKey(userID);
+            var bot = this.redis.Get<BotAccountConfiguration>(key);
+            if (bot != null && stripAccessToken)
+            {
+                bot.accessToken = null;
+            }
+            return bot;
+        }
+
+        public bool DeleteBotAccount(string userID)
+        {
+            var key = BotAccountConfiguration.GetKey(userID);
+            var deleted = this.redis.Delete(key);
+            return deleted;
         }
     }
 }

@@ -11,12 +11,12 @@ namespace KomaruBot.WebAPI.Models
     {
         public static string GetKey(string userID)
         {
-            return $"gamble_{userID}";
+            return $"gamble_{userID}".ToLower();
         }
 
         public string GetKey()
         {
-            return $"gamble_{this.userID}";
+            return $"gamble_{this.userID}".ToLower();
         }
 
         public Common.Models.GambleConfiguration gambleConfiguration{ get; set; }

@@ -11,12 +11,12 @@ namespace KomaruBot.WebAPI.Models
     {
         public static string GetKey(string userID)
         {
-            return $"ceres_{userID}";
+            return $"ceres_{userID}".ToLower();
         }
 
         public string GetKey()
         {
-            return $"ceres_{this.userID}";
+            return $"ceres_{this.userID}".ToLower();
         }
 
         public Common.Models.CeresConfiguration ceresConfiguration { get; set; }

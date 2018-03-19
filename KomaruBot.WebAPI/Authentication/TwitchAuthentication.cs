@@ -11,21 +11,35 @@ namespace KomaruBot.WebAPI.Authentication
     {
         public Models.AuthenticationResult Authenticate(HttpContext context)
         {
+            string tkn;
+            return this.Authenticate(context, out tkn);
+        }
+
+        public Models.AuthenticationResult Authenticate(HttpContext context, out string token)
+        {
             var tokenHeader = context.Request?.Headers["Authorization"];
             var tokenHeaderValue = tokenHeader.Value.FirstOrDefault();
             if (tokenHeaderValue == null)
             {
+                token = null;
                 return new Models.AuthenticationResult
                 {
                     Result = Constants.AuthenticationResult.MissingHeader,
                     Message = "Header 'Authorization' was missing",
                 };
             }
-            return this.Authenticate(tokenHeaderValue);
+            return this.Authenticate(tokenHeaderValue, out token);
         }
 
         public Models.AuthenticationResult Authenticate(string authorizationHeader)
         {
+            string tkn;
+            return this.Authenticate(authorizationHeader, out tkn);
+        }
+
+        public Models.AuthenticationResult Authenticate(string authorizationHeader, out string token)
+        {
+            token = null;
             try
             {
                 if (string.IsNullOrWhiteSpace(authorizationHeader))
@@ -73,6 +87,8 @@ namespace KomaruBot.WebAPI.Authentication
                     var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.AuthenticationResult.TwitchAuthenticationResult>(responseBody);
                     if (result.identified && result.token.valid)
                     {
+                        token = tokenSplit[1];
+
                         return new Models.AuthenticationResult
                         {
                             Result = Constants.AuthenticationResult.Success,

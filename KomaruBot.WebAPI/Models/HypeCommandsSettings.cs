@@ -11,12 +11,12 @@ namespace KomaruBot.WebAPI.Models
     {
         public static string GetKey(string userID)
         {
-            return $"hype_{userID}";
+            return $"hype_{userID}".ToLower();
         }
 
         public string GetKey()
         {
-            return $"hype_{this.userID}";
+            return $"hype_{this.userID}".ToLower();
         }
 
         public List<HypeCommand> hypeCommands { get; set; }
